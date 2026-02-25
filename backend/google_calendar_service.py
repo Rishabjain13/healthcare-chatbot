@@ -82,7 +82,8 @@ class GoogleCalendarService:
             if not working_hours:
                 return []
 
-            duration_minutes = self.config.initial_duration
+            appointment_type = working_hours.get("appointment_type", "initial")
+            duration_minutes = self._get_duration_for_appointment(appointment_type)
 
             slots = self._generate_slots(
                 date,
@@ -113,6 +114,24 @@ class GoogleCalendarService:
                     'appointment_type': schedule.get('appointment_type')
                 }
         return None
+
+    def _get_duration_for_appointment(self, appointment_type: str) -> int:
+        """
+        Returns duration in minutes based on appointment type
+        """
+        appt = self.config.config.get("appointments", {})
+
+        if appointment_type == "initial":
+            return appt.get("initial_duration_min_minutes", 30)
+
+        if appointment_type == "followup":
+            return appt.get("followup_duration_min_minutes", 20)
+
+        if appointment_type == "extended":
+            return appt.get("extended_duration_minutes", 15)
+
+        # fallback
+        return appt.get("initial_duration_min_minutes", 30)
 
     def _generate_slots(
         self,
@@ -160,8 +179,8 @@ class GoogleCalendarService:
                 'date': date
             })
 
-            # Move to next slot (30-minute intervals)
-            current_time += timedelta(minutes=30)
+            SLOT_GAP_MINUTES = 30
+            current_time += timedelta(minutes=SLOT_GAP_MINUTES)
 
         return slots
 
@@ -549,7 +568,15 @@ Booked via: Healthcare Chatbot
         if not working_hours:
             return []
 
-        return self._generate_slots(date, working_hours['open'], working_hours['close'], 60)
+        appointment_type = working_hours.get("appointment_type", "initial")
+        duration_minutes = self._get_duration_for_appointment(appointment_type)
+
+        return self._generate_slots(
+            date,
+            working_hours['open'],
+            working_hours['close'],
+            duration_minutes
+        )
 
     def _create_mock_booking(
         self,

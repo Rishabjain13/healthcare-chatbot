@@ -161,7 +161,8 @@ class ClinicConfig:
     # Appointments
     @property
     def initial_duration(self) -> int:
-        return self.config['appointments']['initial_duration_minutes']
+        appt = self.config.get('appointments', {})
+        return appt.get('initial_duration_min_minutes', 30)
 
     @property
     def followup_duration(self) -> int:

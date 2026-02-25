@@ -30,43 +30,54 @@ location:
 
 # Working Hours
 hours:
-  timezone: "Asia/Dubai"
+  timezone: "Africa/Cairo"
+
   schedule:
-    # Online appointments (Zoom)
+    # ONLINE (Zoom)
     - day: "Thursday"
       open: "09:00"
-      close: "17:00"
+      close: "13:00"
       appointment_type: "online"
-    - day: "Saturday"
-      open: "09:00"
-      close: "17:00"
-      appointment_type: "online"
-    # Offline appointments (In-person at Cairo – Dubai)
-    - day: "Monday"
-      open: "09:00"
-      close: "17:00"
-      appointment_type: "offline"
-    - day: "Tuesday"
-      open: "09:00"
-      close: "17:00"
-      appointment_type: "offline"
-    - day: "Wednesday"
-      open: "09:00"
-      close: "17:00"
-      appointment_type: "offline"
+
     - day: "Friday"
       open: "09:00"
-      close: "17:00"
+      close: "13:00"
+      appointment_type: "online"
+
+    - day: "Saturday"
+      open: "09:00"
+      close: "13:00"
+      appointment_type: "online"
+
+    # OFFLINE (In-Person)
+    - day: "Sunday"
+      open: "10:00"
+      close: "15:00"
       appointment_type: "offline"
-  closed_days: ["Sunday"]
+
+    - day: "Monday"
+      open: "10:00"
+      close: "15:00"
+      appointment_type: "offline"
+
+    - day: "Tuesday"
+      open: "10:00"
+      close: "15:00"
+      appointment_type: "offline"
+
+    - day: "Wednesday"
+      open: "10:00"
+      close: "15:00"
+      appointment_type: "offline"
+
+  closed_days: []
+
   display_format: |
-    📅 **OFFLINE (In-Person) - Cairo/Dubai:**
-    Monday, Tuesday, Wednesday, Friday: 9:00 AM - 5:00 PM
+    🏥 **IN-PERSON (Cairo / Dubai):**
+    Sunday – Wednesday: 10:00 AM – 3:00 PM
 
-    💻 **ONLINE (Zoom Consultations):**
-    Thursday, Saturday: 9:00 AM - 5:00 PM
-
-    💤 Closed: Sunday
+    💻 **ONLINE (Zoom):**
+    Thursday – Saturday: 9:00 AM – 1:00 PM
 
 # Pricing - Location-Based
 pricing:
@@ -322,12 +333,12 @@ services:
 
   virtual_consultation:
     platform: "Zoom"
-    note: "Online consultations via Zoom available on Thursday & Saturday, 9 AM - 5 PM"
+    note: "Online consultations via Zoom available on Thursday to Saturday, 9:00 AM – 1:00 PM"
     booking_process: "Book your preferred time slot and we'll send you a Zoom link"
     same_pricing: true
 
   in_person_consultation:
-    note: "In-person consultations at our clinics in Cairo and Dubai available Monday, Tuesday, Wednesday, Friday, 9 AM - 5 PM"
+    note: "In-person consultations available Sunday to Wednesday, 10:00 AM – 3:00 PM"
     locations: ["Cairo", "Dubai"]
 
   specialties:
@@ -371,18 +382,21 @@ lab_testing:
 
 # Appointment Settings
 appointments:
-  initial_duration_minutes: 30
-  followup_duration_minutes: 20  # Can range 20-30 minutes
-  followup_duration_max_minutes: 30
-  complex_case_duration_minutes: 60
-  booking_advance_days: 60  # How far ahead patients can book
-  cancellation_hours: 24
-  cancellation_fee_percent: 50
-  average_wait_days:
-    urgent: "1-2 days"
-    regular: "3-5 days"
-    followup: "1-3 days"
-  duration_note: "Standard consultations are 30 minutes, follow-ups 20-30 minutes, and complex cases up to 60 minutes"
+  initial_duration_min_minutes: 20
+  initial_duration_max_minutes: 30
+
+  followup_duration_min_minutes: 15
+  followup_duration_max_minutes: 20
+
+  extended_duration_minutes: 15
+  booking_advance_days: 14  # How far ahead patients can book
+  cancellation_hours: 72
+  cancellation_fee_percent: 0
+  
+  duration_note: >
+    Initial consultations last 20–30 minutes,
+    follow-up consultations last 15–20 minutes,
+    and extended consultations are 15 minutes.
 
 # Payment Options
 payment:

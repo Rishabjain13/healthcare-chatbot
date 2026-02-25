@@ -328,7 +328,6 @@ class BaseAgent:
         }
         return suggestions.get(agent_type, "What else can I help you with?")
 
-
     def get_available_slots(self, days_ahead=7, appointment_type=None):
         """
         FAST version for UI / chat flow
@@ -343,6 +342,16 @@ class BaseAgent:
             s['day']: s.get('appointment_type')
             for s in schedule
         }
+
+        # 👇 get appointment durations from config
+        appt_cfg = self.config.config.get("appointments", {})
+
+        def get_duration(appt_type):
+            if appt_type == "followup":
+                return appt_cfg.get("followup_duration_min_minutes", 15)
+            if appt_type == "extended":
+                return appt_cfg.get("extended_duration_minutes", 15)
+            return appt_cfg.get("initial_duration_min_minutes", 20)
 
         slots_by_date = {}
         today = datetime.now().date()
@@ -360,20 +369,20 @@ class BaseAgent:
             if appointment_type and day_type_mapping[day_name] != appointment_type:
                 continue
 
-            # ✅ Generate slots WITHOUT Google check
             working_hours = self._get_working_hours(day_name)
             if not working_hours:
                 continue
+
+            duration_minutes = get_duration(appointment_type)
 
             slots = self._generate_slots(
                 date_str,
                 working_hours['open'],
                 working_hours['close'],
-                self.config.initial_duration
+                duration_minutes
             )
 
             if slots:
-                # only existence needed for UI
                 slots_by_date[date_str] = True
 
             # UI needs max 5 dates
@@ -381,7 +390,7 @@ class BaseAgent:
                 break
 
         return slots_by_date
-        
+
     def get_available_slots_for_date(self, date: str):
         """
         REAL availability check
