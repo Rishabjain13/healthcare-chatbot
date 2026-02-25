@@ -92,10 +92,19 @@ class GoogleCalendarService:
                 duration_minutes
             )
 
-            return [
-                slot for slot in slots
-                if self._is_slot_available(slot['start_datetime'], slot['end_datetime'])
-            ]
+            busy_ranges = self._get_busy_ranges_for_day(date)
+
+            def is_slot_free(slot):
+                slot_start = datetime.fromisoformat(slot["start_datetime"])
+                slot_end = datetime.fromisoformat(slot["end_datetime"])
+
+                for busy_start, busy_end in busy_ranges:
+                    # overlap check
+                    if slot_start < busy_end and slot_end > busy_start:
+                        return False
+                return True
+
+            return [slot for slot in slots if is_slot_free(slot)]
 
         except Exception as e:
             print(f"Error getting available slots: {e}")
@@ -183,30 +192,38 @@ class GoogleCalendarService:
             current_time += timedelta(minutes=SLOT_GAP_MINUTES)
 
         return slots
+        
+    def _get_busy_ranges_for_day(self, date: str):
+        """
+        Fetch all busy time ranges for a day (ONE Google API call)
+        """
+        timezone = ZoneInfo(self.config.timezone)
 
-    def _is_slot_available(self, start_datetime: str, end_datetime: str) -> bool:
-        """Check if a time slot is available (not already booked)"""
-        if not self.service:
-            return True
+        day_start = datetime.strptime(date, "%Y-%m-%d").replace(
+            hour=0, minute=0, second=0, tzinfo=timezone
+        )
+        day_end = day_start + timedelta(days=1)
 
-        try:
-            # Query calendar for events in this time range
-            events_result = self.service.events().list(
-                calendarId=self.calendar_id,
-                timeMin=start_datetime,
-                timeMax=end_datetime,
-                singleEvents=True,
-                orderBy='startTime'
-            ).execute()
+        events = self.service.events().list(
+            calendarId=self.calendar_id,
+            timeMin=day_start.isoformat(),
+            timeMax=day_end.isoformat(),
+            singleEvents=True,
+            orderBy="startTime"
+        ).execute().get("items", [])
 
-            events = events_result.get('items', [])
+        busy_ranges = []
+        for event in events:
+            start = event["start"].get("dateTime")
+            end = event["end"].get("dateTime")
+            if start and end:
+                busy_ranges.append((
+                    datetime.fromisoformat(start),
+                    datetime.fromisoformat(end)
+                ))
 
-            # Slot is available if no events found
-            return len(events) == 0
+        return busy_ranges
 
-        except HttpError as e:
-            print(f"Error checking slot availability: {e}")
-            return False
     def get_events_between(self, start_dt, end_dt):
         """
         Returns Google Calendar events overlapping a time range
