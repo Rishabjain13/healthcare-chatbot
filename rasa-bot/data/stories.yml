@@ -1,0 +1,233 @@
+version: "3.1"
+
+stories:
+# Basic interactions
+- story: greet user
+  steps:
+  - intent: greet
+  - action: utter_greet
+
+- story: say goodbye
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye
+
+# Appointment & Booking
+- story: ask clinic hours
+  steps:
+  - intent: ask_hours
+  - action: utter_hours
+
+- story: book appointment - online consultation
+  steps:
+  - intent: book_appointment
+  - action: utter_introduce_doctor
+  - action: utter_ask_consultation_type
+  - intent: select_online_consultation
+  - action: utter_book_online_appointment
+  - action: booking_form
+  - active_loop: booking_form
+  - active_loop: null
+  - action: action_book_appointment
+
+- story: book appointment - offline consultation
+  steps:
+  - intent: book_appointment
+  - action: utter_introduce_doctor
+  - action: utter_ask_consultation_type
+  - intent: select_offline_consultation
+  - action: utter_book_offline_appointment
+  - action: booking_form
+  - active_loop: booking_form
+  - active_loop: null
+  - action: action_book_appointment
+
+- story: ask online consultation
+  steps:
+  - intent: ask_online_consultation
+  - action: utter_online_consultation
+
+- story: ask waiting time
+  steps:
+  - intent: ask_waiting_time
+  - action: utter_waiting_time
+
+- story: ask walk-in policy
+  steps:
+  - intent: ask_walk_in
+  - action: utter_walk_in
+
+- story: ask consultation duration
+  steps:
+  - intent: ask_consultation_duration
+  - action: utter_consultation_duration
+
+- story: ask cancellation policy
+  steps:
+  - intent: ask_cancellation_policy
+  - action: utter_cancellation_policy
+
+- story: ask reschedule
+  steps:
+  - intent: ask_reschedule
+  - action: utter_reschedule
+
+# Pricing & Payment
+- story: ask pricing
+  steps:
+  - intent: ask_pricing
+  - action: utter_pricing
+
+- story: ask followup pricing
+  steps:
+  - intent: ask_followup_pricing
+  - action: utter_followup_pricing
+
+- story: ask packages
+  steps:
+  - intent: ask_packages
+  - action: utter_packages
+
+- story: ask insurance
+  steps:
+  - intent: ask_insurance
+  - action: utter_insurance
+
+- story: ask payment methods
+  steps:
+  - intent: ask_payment_methods
+  - action: utter_payment_methods
+
+- story: ask lab cost
+  steps:
+  - intent: ask_lab_cost
+  - action: utter_lab_cost
+
+- story: ask treatment cost
+  steps:
+  - intent: ask_treatment_cost
+  - action: utter_treatment_cost
+
+# Lab Tests
+- story: ask bring tests
+  steps:
+  - intent: ask_bring_tests
+  - action: utter_bring_tests
+
+- story: ask tests needed
+  steps:
+  - intent: ask_tests_needed
+  - action: utter_tests_needed
+
+- story: ask lab at clinic
+  steps:
+  - intent: ask_lab_at_clinic
+  - action: utter_lab_at_clinic
+
+- story: ask lab results time
+  steps:
+  - intent: ask_lab_results_time
+  - action: utter_lab_results_time
+
+- story: ask test guidance
+  steps:
+  - intent: ask_test_guidance
+  - action: utter_test_guidance
+
+- story: ask repeat tests
+  steps:
+  - intent: ask_repeat_tests
+  - action: utter_repeat_tests
+
+- story: ask functional tests
+  steps:
+  - intent: ask_functional_tests
+  - action: utter_functional_tests
+
+# Treatment Approach
+- story: ask functional medicine
+  steps:
+  - intent: ask_functional_medicine
+  - action: utter_functional_medicine
+
+- story: ask conditions treated
+  steps:
+  - intent: ask_conditions_treated
+  - action: utter_conditions_treated
+
+- story: ask treatment methods
+  steps:
+  - intent: ask_treatment_methods
+  - action: utter_treatment_methods
+
+- story: ask improvement time
+  steps:
+  - intent: ask_improvement_time
+  - action: utter_improvement_time
+
+- story: ask followup frequency
+  steps:
+  - intent: ask_followup_frequency
+  - action: utter_followup_frequency
+
+- story: ask specialist coordination
+  steps:
+  - intent: ask_specialist_coordination
+  - action: utter_specialist_coordination
+
+# Communication & Follow-up
+- story: ask contact
+  steps:
+  - intent: ask_contact
+  - action: utter_contact
+
+- story: ask whatsapp
+  steps:
+  - intent: ask_whatsapp
+  - action: utter_whatsapp
+
+- story: ask send results
+  steps:
+  - intent: ask_send_results
+  - action: utter_send_results
+
+- story: ask doctor followup
+  steps:
+  - intent: ask_doctor_followup
+  - action: utter_doctor_followup
+
+- story: ask followup cost
+  steps:
+  - intent: ask_followup_cost
+  - action: utter_followup_cost
+
+- story: ask urgent questions
+  steps:
+  - intent: ask_urgent_questions
+  - action: utter_urgent_questions
+
+# Miscellaneous
+- story: ask age groups
+  steps:
+  - intent: ask_age_groups
+  - action: utter_age_groups
+
+- story: ask chronic conditions
+  steps:
+  - intent: ask_chronic_conditions
+  - action: utter_chronic_conditions
+
+- story: ask health plans
+  steps:
+  - intent: ask_health_plans
+  - action: utter_health_plans
+
+- story: ask specific conditions
+  steps:
+  - intent: ask_specific_conditions
+  - action: utter_specific_conditions
+
+- story: ask location
+  steps:
+  - intent: ask_location
+  - action: utter_location

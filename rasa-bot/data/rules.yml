@@ -1,0 +1,228 @@
+version: "3.1"
+
+rules:
+
+- rule: Say goodbye anytime the user says goodbye
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye
+
+- rule: Say 'I am a bot' anytime the user challenges
+  steps:
+  - intent: bot_challenge
+  - action: utter_iamabot
+
+# ===== APPOINTMENT & BOOKING RULES =====
+- rule: Provide clinic hours
+  steps:
+  - intent: ask_hours
+  - action: utter_hours
+
+# Appointment booking now uses stories instead of rules to handle the flow
+
+- rule: Activate booking form - online
+  steps:
+  - intent: select_online_consultation
+  - action: utter_book_online_appointment
+  - action: booking_form
+  - active_loop: booking_form
+
+- rule: Activate booking form - offline
+  steps:
+  - intent: select_offline_consultation
+  - action: utter_book_offline_appointment
+  - action: booking_form
+  - active_loop: booking_form
+
+- rule: Submit booking form
+  condition:
+  - active_loop: booking_form
+  steps:
+  - action: booking_form
+  - active_loop: null
+  - action: action_book_appointment
+
+- rule: Explain online consultation
+  steps:
+  - intent: ask_online_consultation
+  - action: utter_online_consultation
+
+- rule: Explain waiting time
+  steps:
+  - intent: ask_waiting_time
+  - action: utter_waiting_time
+
+- rule: Explain walk-in policy
+  steps:
+  - intent: ask_walk_in
+  - action: utter_walk_in
+
+- rule: Explain consultation duration
+  steps:
+  - intent: ask_consultation_duration
+  - action: utter_consultation_duration
+
+- rule: Explain cancellation policy
+  steps:
+  - intent: ask_cancellation_policy
+  - action: utter_cancellation_policy
+
+- rule: Explain reschedule policy
+  steps:
+  - intent: ask_reschedule
+  - action: utter_reschedule
+
+# ===== PRICING & PAYMENT RULES =====
+- rule: Provide pricing information
+  steps:
+  - intent: ask_pricing
+  - action: utter_pricing
+
+- rule: Provide follow-up pricing
+  steps:
+  - intent: ask_followup_pricing
+  - action: utter_followup_pricing
+
+- rule: Explain consultation packages
+  steps:
+  - intent: ask_packages
+  - action: utter_packages
+
+- rule: Explain insurance policy
+  steps:
+  - intent: ask_insurance
+  - action: utter_insurance
+
+- rule: Explain payment methods
+  steps:
+  - intent: ask_payment_methods
+  - action: utter_payment_methods
+
+- rule: Explain lab costs
+  steps:
+  - intent: ask_lab_cost
+  - action: utter_lab_cost
+
+- rule: Explain treatment costs
+  steps:
+  - intent: ask_treatment_cost
+  - action: utter_treatment_cost
+
+# ===== LAB TESTS & MEDICAL REQUIREMENTS RULES =====
+- rule: Explain bringing previous tests
+  steps:
+  - intent: ask_bring_tests
+  - action: utter_bring_tests
+
+- rule: Explain tests needed before consultation
+  steps:
+  - intent: ask_tests_needed
+  - action: utter_tests_needed
+
+- rule: Explain lab testing at clinic
+  steps:
+  - intent: ask_lab_at_clinic
+  - action: utter_lab_at_clinic
+
+- rule: Explain lab results timing
+  steps:
+  - intent: ask_lab_results_time
+  - action: utter_lab_results_time
+
+- rule: Explain test guidance from doctor
+  steps:
+  - intent: ask_test_guidance
+  - action: utter_test_guidance
+
+- rule: Explain repeat tests policy
+  steps:
+  - intent: ask_repeat_tests
+  - action: utter_repeat_tests
+
+- rule: Explain functional tests
+  steps:
+  - intent: ask_functional_tests
+  - action: utter_functional_tests
+
+# ===== TREATMENT APPROACH RULES =====
+- rule: Explain functional medicine
+  steps:
+  - intent: ask_functional_medicine
+  - action: utter_functional_medicine
+
+- rule: Explain conditions treated
+  steps:
+  - intent: ask_conditions_treated
+  - action: utter_conditions_treated
+
+- rule: Explain treatment methods
+  steps:
+  - intent: ask_treatment_methods
+  - action: utter_treatment_methods
+
+- rule: Explain improvement timeline
+  steps:
+  - intent: ask_improvement_time
+  - action: utter_improvement_time
+
+- rule: Explain follow-up frequency
+  steps:
+  - intent: ask_followup_frequency
+  - action: utter_followup_frequency
+
+- rule: Explain specialist coordination
+  steps:
+  - intent: ask_specialist_coordination
+  - action: utter_specialist_coordination
+
+# ===== COMMUNICATION & FOLLOW-UP RULES =====
+- rule: Provide contact information
+  steps:
+  - intent: ask_contact
+  - action: utter_contact
+
+- rule: Explain WhatsApp support
+  steps:
+  - intent: ask_whatsapp
+  - action: utter_whatsapp
+
+- rule: Explain sending results before appointment
+  steps:
+  - intent: ask_send_results
+  - action: utter_send_results
+
+- rule: Explain doctor follow-up
+  steps:
+  - intent: ask_doctor_followup
+  - action: utter_doctor_followup
+
+- rule: Explain follow-up costs
+  steps:
+  - intent: ask_followup_cost
+  - action: utter_followup_cost
+
+- rule: Explain urgent questions handling
+  steps:
+  - intent: ask_urgent_questions
+  - action: utter_urgent_questions
+
+# ===== MISCELLANEOUS RULES =====
+- rule: Explain age groups treated
+  steps:
+  - intent: ask_age_groups
+  - action: utter_age_groups
+
+- rule: Explain chronic conditions treatment
+  steps:
+  - intent: ask_chronic_conditions
+  - action: utter_chronic_conditions
+
+- rule: Explain long-term health plans
+  steps:
+  - intent: ask_health_plans
+  - action: utter_health_plans
+
+- rule: Explain specific conditions treatment
+  steps:
+  - intent: ask_specific_conditions
+  - action: utter_specific_conditions

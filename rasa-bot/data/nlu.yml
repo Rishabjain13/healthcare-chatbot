@@ -1,0 +1,595 @@
+version: "3.1"
+
+nlu:
+- intent: greet
+  examples: |
+    - hi
+    - hello
+    - hey
+    - good morning
+    - good evening
+    - مرحبا
+    - مرحباً
+    - السلام عليكم
+    - أهلا
+
+- intent: goodbye
+  examples: |
+    - bye
+    - goodbye
+    - see you
+    - thanks
+    - thank you
+    - مع السلامة
+    - شكراً
+
+# ===== APPOINTMENT & BOOKING =====
+- intent: ask_hours
+  examples: |
+    - what are your hours
+    - when are you open
+    - clinic timings
+    - what are your clinic working hours
+    - when can I visit
+    - working hours
+    - opening hours
+    - what time do you open
+    - what time do you close
+    - clinic schedule
+    - operation hours
+    - are you open on weekends
+    - what days are you open
+    - tell me about clinic hours
+    - i want to know about clinic hours
+    - tell me more about clinic hours
+    - i want to know more about clinic hours
+    - tell me about your hours
+    - more about clinic hours
+    - أوقات العمل
+    - متى تكونون مفتوحين
+    - متى مفتوح
+    - ما هي ساعات العمل
+    - في أي وقت تفتحون
+
+- intent: book_appointment
+  examples: |
+    - book appointment
+    - I want to schedule
+    - reserve a slot
+    - how can I book an appointment
+    - I need an appointment
+    - schedule a consultation
+    - make an appointment
+    - book a consultation
+    - arrange an appointment
+    - I'd like to book
+    - can I make a booking
+    - book a slot
+    - set up an appointment
+    - schedule a visit
+    - I want to see the doctor
+    - how do I schedule
+    - booking process
+    - I want to consult
+    - I need to see a doctor
+    - consult with doctor
+    - حجز موعد
+    - أريد موعد
+    - أريد حجز موعد
+    - احجز لي موعداً
+    - كيف أحجز موعداً
+    - أريد أن أحجز
+
+- intent: select_online_consultation
+  examples: |
+    - online
+    - I want online
+    - video call
+    - virtual
+    - I prefer online
+    - I'll do it online
+    - online please
+    - choose online
+    - select online
+    - أونلاين
+    - عبر الإنترنت
+    - استشارة عبر الإنترنت
+    - عن بُعد
+    - استشارة أونلاين
+
+- intent: select_offline_consultation
+  examples: |
+    - offline
+    - in-clinic
+    - in clinic
+    - visit clinic
+    - I want to come to clinic
+    - in person
+    - physical consultation
+    - في العيادة
+    - حضورياً
+    - استشارة حضورية
+    - زيارة العيادة
+    - at the clinic
+    - I prefer in-clinic
+    - I'll come to the clinic
+    - offline please
+    - في العيادة
+    - حضوري
+    - بالعيادة
+
+- intent: ask_online_consultation
+  examples: |
+    - do you offer online consultations
+    - can I consult online
+    - virtual consultation
+    - do you have video calls
+    - remote consultation
+    - do you offer virtual consultations
+    - online appointment
+    - telemedicine
+    - teleconsultation
+    - video consultation
+    - can I meet the doctor online
+    - virtual visit
+    - online doctor consultation
+    - consultation from home
+    - هل تقدمون استشارات أونلاين
+    - هل تقدمون استشارات عبر الإنترنت
+    - استشارة عن بُعد
+    - هل يمكنني الاستشارة أونلاين
+
+- intent: ask_waiting_time
+  examples: |
+    - how long is the waiting time
+    - when is the earliest appointment
+    - how long to get an appointment
+    - what is the wait time
+    - how soon can I get an appointment
+    - earliest available slot
+    - how long until I can see the doctor
+    - appointment availability
+    - how many days wait
+    - when can I come in
+    - next available appointment
+    - متى أقرب موعد
+    - متى أقرب موعد متاح
+    - كم وقت الانتظار
+    - كم المدة للحصول على موعد
+
+- intent: ask_walk_in
+  examples: |
+    - do you accept walk-ins
+    - can I come without booking
+    - do I need an appointment
+    - only bookings
+    - walk in patients
+    - can I just show up
+    - do I need to book first
+    - accept walk-ins
+    - can I visit without appointment
+    - هل أستطيع الحضور بدون موعد
+    - هل يمكنني القدوم بدون حجز
+    - هل تقبلون الزيارات بدون موعد
+
+- intent: ask_consultation_duration
+  examples: |
+    - how long does each consultation take
+    - consultation duration
+    - how much time per visit
+    - length of appointment
+    - how long is a consultation
+    - appointment length
+    - time for each visit
+    - duration of consultation
+    - how many minutes
+    - كم مدة الاستشارة
+    - كم تستغرق الاستشارة
+    - ما مدة الموعد
+
+- intent: ask_cancellation_policy
+  examples: |
+    - what is your cancellation policy
+    - can I cancel my appointment
+    - cancellation rules
+    - cancellation fee
+    - how to cancel
+    - cancel booking
+    - what if I cancel
+    - سياسة الإلغاء
+    - ما هي سياسة الإلغاء
+    - كيف ألغي الموعد
+
+- intent: ask_reschedule
+  examples: |
+    - can I reschedule
+    - change my appointment
+    - move my appointment
+    - reschedule my booking
+    - change appointment date
+    - shift my appointment
+    - can I change the time
+    - modify appointment
+    - تغيير الموعد
+    - إعادة جدولة
+    - هل يمكنني تغيير الموعد
+    - أريد تعديل موعدي
+
+# ===== PRICING & PAYMENT =====
+- intent: ask_pricing
+  examples: |
+    - how much does it cost
+    - consultation fees
+    - pricing
+    - what is the consultation price
+    - how much for initial visit
+    - cost of consultation
+    - prices
+    - how much do you charge
+    - what are your fees
+    - consultation cost
+    - price for appointment
+    - كم السعر
+    - كم التكلفة
+    - رسوم الاستشارة
+    - كم سعر الكشف
+    - ما هي الأسعار
+    - كم تكلفة الاستشارة
+
+- intent: ask_followup_pricing
+  examples: |
+    - are follow-up visits priced differently
+    - cost of follow up
+    - follow-up price
+    - how much for second visit
+    - follow up consultation cost
+    - is follow up cheaper
+    - price for follow up visit
+    - second visit cost
+    - سعر المتابعة
+    - كم سعر زيارة المتابعة
+    - تكلفة المتابعة
+
+- intent: ask_packages
+  examples: |
+    - do you offer consultation packages
+    - package deals
+    - bundled pricing
+    - health packages
+    - discount packages
+    - do you have packages
+    - package options
+    - bundled services
+    - عروض
+    - باقات
+    - هل لديكم باقات
+    - عروض الاستشارات
+
+- intent: ask_insurance
+  examples: |
+    - do you accept insurance
+    - insurance companies
+    - which insurance do you take
+    - can I use insurance
+    - insurance coverage
+    - do you work with insurance
+    - medical insurance accepted
+    - which insurance providers
+    - insurance reimbursement
+    - هل تقبلون التأمين
+    - هل تقبلون التأمين الصحي
+    - شركات التأمين
+    - هل يمكنني استخدام التأمين
+
+- intent: ask_payment_methods
+  examples: |
+    - what payment methods do you accept
+    - can I pay by card
+    - cash or card
+    - payment options
+    - how can I pay
+    - do you take credit card
+    - payment types
+    - accepted payment methods
+    - bank transfer
+    - طرق الدفع
+
+- intent: ask_lab_cost
+  examples: |
+    - is lab testing included
+    - lab test cost
+    - testing fees
+    - are tests included in consultation
+    - how much for lab tests
+    - lab fees
+    - price of tests
+    - is testing extra
+    - سعر التحاليل
+
+- intent: ask_treatment_cost
+  examples: |
+    - are supplements charged separately
+    - treatment plan cost
+    - medication pricing
+    - supplement costs
+    - how much for supplements
+    - is treatment extra
+    - price of medications
+    - treatment fees
+    - سعر المكملات
+    - سعر العلاج
+
+# ===== LAB TESTS & MEDICAL REQUIREMENTS =====
+- intent: ask_bring_tests
+  examples: |
+    - do I need to bring previous lab tests
+    - should I bring my test results
+    - bring old tests
+    - should I bring lab reports
+    - do I bring my medical records
+    - previous test results
+    - bring test reports
+    - هل أحضر التحاليل القديمة
+
+- intent: ask_tests_needed
+  examples: |
+    - are there specific tests I should do
+    - what tests do I need before consultation
+    - required tests
+    - do I need tests before appointment
+    - what tests should I do
+    - any tests needed
+    - pre-consultation tests
+    - التحاليل المطلوبة
+    - أي تحاليل أحتاج
+
+- intent: ask_lab_at_clinic
+  examples: |
+    - can I do lab tests at your clinic
+    - do you have a lab
+    - testing at clinic
+    - on-site lab
+    - lab tests available
+    - do tests at clinic
+    - in-house lab
+    - هل يوجد مختبر
+
+- intent: ask_lab_results_time
+  examples: |
+    - how long do lab results take
+    - when will I get results
+    - lab turnaround time
+    - how long for results
+    - when are results ready
+    - result waiting time
+    - متى تظهر نتائج التحاليل
+
+- intent: ask_test_guidance
+  examples: |
+    - will the doctor guide me on tests
+    - which tests based on symptoms
+    - doctor recommend tests
+    - will doctor tell me what tests
+    - doctor advice on tests
+    - tests based on symptoms
+    - الدكتور يحدد التحاليل
+
+- intent: ask_repeat_tests
+  examples: |
+    - do you repeat tests
+    - old test results
+    - how recent should tests be
+    - إعادة التحاليل
+
+- intent: ask_functional_tests
+  examples: |
+    - do you offer functional tests
+    - food sensitivity tests
+    - hormone tests
+    - stool analysis
+    - gut microbiome test
+    - advanced testing
+    - specialized tests
+    - food intolerance test
+    - comprehensive hormone panel
+    - microbiome analysis
+    - organic acids test
+    - تحاليل وظيفية
+    - تحليل الحساسية
+
+# ===== TREATMENT APPROACH =====
+- intent: ask_functional_medicine
+  examples: |
+    - what is functional medicine
+    - how is it different from traditional medicine
+    - functional vs conventional medicine
+    - explain functional medicine
+    - difference between functional and traditional
+    - what makes functional medicine different
+    - root cause approach
+    - ما هو الطب الوظيفي
+    - الفرق بين الطب التقليدي والوظيفي
+
+- intent: ask_conditions_treated
+  examples: |
+    - what conditions do you treat
+    - what diseases
+    - what health issues
+    - conditions you treat
+    - what can you help with
+    - health problems you treat
+    - medical conditions
+    - ما الأمراض التي تعالجونها
+    - أي حالات تعالجون
+
+- intent: ask_treatment_methods
+  examples: |
+    - do you use supplements
+    - lifestyle changes or medication
+    - what treatment methods
+    - natural treatment
+    - how do you treat
+    - treatment approach
+    - medication or supplements
+    - holistic treatment
+    - طرق العلاج
+    - مكملات أم أدوية
+
+- intent: ask_improvement_time
+  examples: |
+    - how long to see improvement
+    - when will I feel better
+    - treatment duration
+    - how long until I see results
+    - timeline for improvement
+    - when will treatment work
+    - how soon will I improve
+    - متى أرى نتائج
+    - كم يستغرق العلاج
+
+- intent: ask_followup_frequency
+  examples: |
+    - how often do I need follow-up
+    - frequency of visits
+    - how many appointments
+    - follow-up schedule
+    - how often do I come back
+    - visit frequency
+    - كم مرة متابعة
+    - عدد الزيارات
+
+- intent: ask_specialist_coordination
+  examples: |
+    - do you coordinate with other specialists
+    - work with other doctors
+    - referrals
+    - التنسيق مع أطباء آخرين
+
+# ===== COMMUNICATION & FOLLOW-UP =====
+- intent: ask_contact
+  examples: |
+    - how can I contact the clinic
+    - contact information
+    - phone number
+    - كيف أتواصل
+    - رقم التواصل
+
+- intent: ask_whatsapp
+  examples: |
+    - do you offer WhatsApp support
+    - WhatsApp number
+    - can I message on WhatsApp
+    - واتساب
+    - رقم الواتس
+
+- intent: ask_send_results
+  examples: |
+    - can I send lab results before appointment
+    - send results in advance
+    - share test results
+    - إرسال التحاليل قبل الموعد
+
+- intent: ask_doctor_followup
+  examples: |
+    - will the doctor follow up
+    - follow-up after consultation
+    - doctor contact after visit
+    - متابعة بعد الاستشارة
+
+- intent: ask_followup_cost
+  examples: |
+    - is follow-up included
+    - is follow-up charged separately
+    - follow-up fees
+    - سعر المتابعة بعد الاستشارة
+
+- intent: ask_urgent_questions
+  examples: |
+    - how can I reach doctor for urgent questions
+    - emergency contact
+    - urgent support
+    - للاستفسارات الطارئة
+    - حالة طارئة
+
+# ===== MISCELLANEOUS =====
+- intent: ask_age_groups
+  examples: |
+    - do you treat children
+    - adults only
+    - kids treatment
+    - age groups
+    - هل تعالجون الأطفال
+    - للكبار فقط
+
+- intent: ask_chronic_conditions
+  examples: |
+    - do you treat chronic conditions
+    - long-term illnesses
+    - chronic disease management
+    - أمراض مزمنة
+
+- intent: ask_health_plans
+  examples: |
+    - do you create long-term health plans
+    - health planning
+    - wellness programs
+    - خطة صحية طويلة المدى
+
+- intent: ask_specific_conditions
+  examples: |
+    - do you help with weight loss
+    - gut health treatment
+    - fatigue issues
+    - hormonal imbalance
+    - chronic fatigue
+    - weight management
+    - digestive problems
+    - hormone problems
+    - thyroid treatment
+    - IBS treatment
+    - bloating issues
+    - metabolic issues
+    - انقاص الوزن
+    - صحة الأمعاء
+    - إجهاد
+    - اختلال هرموني
+    - thyroid issues
+    - diabetes management
+    - autoimmune conditions
+
+- intent: ask_location
+  examples: |
+    - where are you located
+    - clinic location
+    - address
+    - where is the clinic
+    - how to get there
+    - clinic address
+    - where can I find you
+    - location
+    - موقع العيادة
+    - العنوان
+
+- intent: ask_doctors
+  examples: |
+    - tell me about the doctor
+    - who is the doctor
+    - doctor information
+    - I want to know about Dr. Rania
+    - tell me more about the doctor
+    - doctor details
+    - about the doctor
+    - I want to know more about the doctor
+    - can you tell me about your doctor
+    - who will be treating me
+    - doctor's background
+    - what are the doctor's qualifications
+    - معلومات عن الدكتورة
+    - من الدكتور
+
+- intent: bot_challenge
+  examples: |
+    - are you a bot
+    - are you human
+    - am I talking to a bot
+    - هل أنت روبوت

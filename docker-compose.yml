@@ -1,0 +1,199 @@
+# ===================================================================
+# Healthcare Chatbot - Complete Stack Docker Compose
+# Frontend + Backend + Rasa + Traefik (Path-based routing)
+# ===================================================================
+#
+# Architecture:
+#   Cloudflare (HTTPS) → Server:80 → Traefik →
+#       / → Frontend
+#       /api → Backend
+#
+# Quick Start:
+#   1. Ensure DNS: healthcare.maglabs.ai → 35.226.43.225
+#   2. Cloudflare proxy enabled (orange cloud)
+#   3. Run: docker-compose --env-file .env up -d
+#   4. Access:
+#      - Frontend: https://healthcare.maglabs.ai/
+#      - Backend API: https://healthcare.maglabs.ai/api/chat
+#      - Traefik Dashboard: http://35.226.43.225:8080
+#
+# ===================================================================
+
+version: '3.8'
+
+services:
+  # ==================== TRAEFIK REVERSE PROXY ====================
+  # Path-based routing: / → Frontend, /api → Backend
+  # Cloudflare handles HTTPS, Traefik routes on HTTP (port 80)
+  traefik:
+    image: traefik:v2.11
+    container_name: healthcare-traefik
+    environment:
+      - DOCKER_API_VERSION=1.44
+    command:
+      # Enable Docker provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+
+      # Entry point on port 80 (Cloudflare handles HTTPS)
+      - "--entrypoints.web.address=:80"
+
+      # Enable dashboard (optional, for debugging)
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+    ports:
+      - "80:80"  # HTTP for all traffic (Cloudflare adds HTTPS)
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+
+  # ==================== RASA NLU SERVICE ====================
+  # Uses pre-built image with trained model included
+  rasa:
+    image: magureme/healthcare-rasa:v1.1
+    container_name: healthcare-rasa
+    ports:
+      - "5005:5005"
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5005/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==================== BACKEND API SERVICE ====================
+  backend:
+    image: magureme/healthcare-backend:latest
+    container_name: healthcare-backend
+    expose:
+      - "3000"
+    environment:
+      - PORT=3000
+      - RASA_URL=http://rasa:5005
+      - PYTHONUNBUFFERED=1
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - TWILIO_WHATSAPP_NUMBER=${TWILIO_WHATSAPP_NUMBER}
+      - CONFIDENCE_THRESHOLD=${CONFIDENCE_THRESHOLD:-0.70}
+      - ZOOM_ACCOUNT_ID=${ZOOM_ACCOUNT_ID}
+      - ZOOM_CLIENT_ID=${ZOOM_CLIENT_ID}
+      - ZOOM_CLIENT_SECRET=${ZOOM_CLIENT_SECRET}
+    networks:
+      - healthcare-network
+    volumes:
+      - ./backend/knowledge_base:/app/knowledge_base:ro
+      - ./backend/google_credentials.json:/app/google_credentials.json:ro
+      - ./backend/google_token.json:/app/google_token.json:rw
+      - ./backend/config.yml:/app/config.yml:ro
+    depends_on:
+      rasa:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      # Enable Traefik for this service
+      - "traefik.enable=true"
+
+      # Route /api/* to backend (higher priority)
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.routers.backend.priority=10"
+
+      # Strip /api prefix before forwarding to backend
+      - "traefik.http.middlewares.backend-stripprefix.stripprefix.prefixes=/api"
+
+      # Service configuration
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
+
+      # Apply middleware
+      - "traefik.http.routers.backend.middlewares=backend-stripprefix"
+
+  # ==================== FRONTEND SERVICE ====================
+  # Cloudflare handles HTTPS for healthcare.maglabs.ai
+  # Traefik routes / to frontend, /api to backend
+  frontend:
+    image: magureme/healthcare-frontend:v3  # Updated with /api path
+    container_name: healthcare-frontend
+    expose:
+      - "80"
+    networks:
+      - healthcare-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      # Enable Traefik for this service
+      - "traefik.enable=true"
+
+      # Route everything else (/) to frontend (lower priority)
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.priority=1"
+
+      # Service configuration
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+
+# ==================== NETWORK ====================
+networks:
+  healthcare-network:
+    driver: bridge
+    name: healthcare-network
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1
+    driver_opts:
+      com.docker.network.bridge.name: br-healthcare
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.bridge.enable_icc: "true"

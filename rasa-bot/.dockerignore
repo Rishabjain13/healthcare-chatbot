@@ -1,0 +1,47 @@
+# Rasa
+# NOTE: We NEED to include models in the Docker image
+# models/*.tar.gz  <- REMOVED this line so models are included
+results/
+*.db
+*.db-shm
+*.db-wal
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+README.md
+docs/
+
+# Tests
+tests/
+test_*.py
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+.rasa/

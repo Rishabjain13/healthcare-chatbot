@@ -1,0 +1,288 @@
+version: "3.1"
+
+intents:
+  - greet
+  - goodbye
+  - ask_hours
+  - book_appointment
+  - select_online_consultation
+  - select_offline_consultation
+  - ask_online_consultation
+  - ask_waiting_time
+  - ask_walk_in
+  - ask_consultation_duration
+  - ask_cancellation_policy
+  - ask_reschedule
+  - ask_pricing
+  - ask_followup_pricing
+  - ask_packages
+  - ask_insurance
+  - ask_payment_methods
+  - ask_lab_cost
+  - ask_treatment_cost
+  - ask_bring_tests
+  - ask_tests_needed
+  - ask_lab_at_clinic
+  - ask_lab_results_time
+  - ask_test_guidance
+  - ask_repeat_tests
+  - ask_functional_tests
+  - ask_functional_medicine
+  - ask_conditions_treated
+  - ask_treatment_methods
+  - ask_improvement_time
+  - ask_followup_frequency
+  - ask_specialist_coordination
+  - ask_contact
+  - ask_whatsapp
+  - ask_send_results
+  - ask_doctor_followup
+  - ask_followup_cost
+  - ask_urgent_questions
+  - ask_age_groups
+  - ask_chronic_conditions
+  - ask_health_plans
+  - ask_specific_conditions
+  - ask_location
+  - bot_challenge
+
+entities:
+  - consultation_type
+
+slots:
+  consultation_type:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: null
+
+  patient_name:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: booking_form
+            requested_slot: patient_name
+
+  patient_email:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: booking_form
+            requested_slot: patient_email
+
+  patient_phone:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: booking_form
+            requested_slot: patient_phone
+
+  appointment_date:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: booking_form
+            requested_slot: appointment_date
+
+  appointment_time:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: booking_form
+            requested_slot: appointment_time
+
+actions:
+  - action_book_appointment
+
+forms:
+  booking_form:
+    required_slots:
+      - patient_name
+      - patient_email
+      - patient_phone
+      - appointment_date
+      - appointment_time
+
+responses:
+  utter_greet:
+    - text: "Hi! 👋 Welcome to Functional Medicine Clinics.\n\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ Clinic information\n3️⃣ Ask a question"
+
+  utter_goodbye:
+    - text: "Goodbye! Take care! 👋 Feel free to reach out anytime."
+
+  # ===== APPOINTMENT & BOOKING RESPONSES =====
+  utter_introduce_doctor:
+    - text: "Great! Let me introduce you to our doctor. 👨‍⚕️\n\n🩺 Dr. Rania\nFunctional Medicine Specialist\n\nDr. Rania specializes in:\n• Root-cause approach to health\n• Gut health & digestive issues\n• Hormonal balance\n• Chronic conditions management\n• Personalized nutrition & lifestyle plans\n\nWith years of experience in functional medicine, Dr. Rania helps patients achieve optimal health through comprehensive testing and individualized treatment protocols."
+
+  utter_ask_consultation_type:
+    - text: "Would you like an online or offline consultation? 💻🏥"
+      buttons:
+        - title: "Online Consultation 💻"
+          payload: "/select_online_consultation"
+        - title: "Offline (In-Clinic) Consultation 🏥"
+          payload: "/select_offline_consultation"
+
+  utter_book_online_appointment:
+    - text: "Perfect! You've chosen an online consultation. 💻\n\n📅 How to book your virtual appointment:\n\n• WhatsApp: +971501234567\n• Phone: +971501234567\n• Website: [Website URL]\n\n⏰ Available:\n• Thursday: 9 AM - 5 PM\n• Saturday: 9 AM - 5 PM\n\n💰 Consultation Fee: 350 AED (Initial)\n\nYou'll receive a video call link before your appointment.\n\nWhat you'll need:\n• Stable internet connection\n• Device with camera (phone/laptop)\n• Quiet, private space\n\nWould you like to proceed with booking?"
+
+  utter_book_offline_appointment:
+    - text: "Excellent! You've chosen an in-clinic consultation. 🏥\n\n📅 How to book your appointment:\n\n• WhatsApp: +971501234567\n• Phone: +971501234567\n• Website: [Website URL]\n• Visit us directly\n\n⏰ Available:\n• Thursday: 9 AM - 5 PM\n• Saturday: 9 AM - 5 PM\n\n💰 Consultation Fee: 350 AED (Initial)\n\n📍 Location: Dubai Healthcare City\n\n📋 What to bring:\n• Previous medical records (if any)\n• Lab test results\n• List of current medications\n• Health insurance card\n\nWould you like to proceed with booking?"
+
+  utter_ask_patient_name:
+    - text: "Great! Let's collect your details. 📝\n\nWhat's your full name?"
+
+  utter_ask_patient_email:
+    - text: "Thanks! What's your email address?\n\n(We'll send the appointment confirmation here)"
+
+  utter_ask_patient_phone:
+    - text: "Perfect! What's your phone number?\n\n(Format: +971xxxxxxxxx)"
+
+  utter_ask_appointment_date:
+    - text: "When would you like to book the appointment?\n\n(Please provide date in format: YYYY-MM-DD, e.g., 2025-12-01)"
+
+  utter_ask_appointment_time:
+    - text: "What time works best for you?\n\n(Please provide time in format: HH:MM, e.g., 10:00)"
+
+  utter_booking_confirm:
+    - text: "Let me confirm your booking details:\n\n👤 Name: {patient_name}\n📧 Email: {patient_email}\n📱 Phone: {patient_phone}\n🏥 Type: {consultation_type}\n📅 Date: {appointment_date}\n⏰ Time: {appointment_time}\n\nIs this correct? (yes/no)"
+
+  utter_hours:
+    - text: "⏰ **Clinic Working Hours:**\n\n📅 Thursday: 9:00 AM - 5:00 PM\n📅 Saturday: 9:00 AM - 5:00 PM\n\n💤 Closed: Sunday - Wednesday & Friday\n\nWe also offer limited after-hours consultations based on availability."
+
+  utter_book_appointment:
+    - text: "📅 **How to Book an Appointment:**\n\nYou can book through:\n• Our website\n• WhatsApp: +971501234567\n• Phone: +971501234567\n• Simply visit the clinic and our team will assist you"
+
+  utter_online_consultation:
+    - text: "💻 **Online Consultations:**\n\nYes, we provide online/virtual consultations for patients who prefer remote support.\n\nPerfect for:\n• Remote patients\n• Follow-up consultations\n• Those who prefer virtual care\n\nContact us to book your virtual appointment!"
+
+  utter_waiting_time:
+    - text: "⏱️ **Appointment Waiting Time:**\n\nWe usually offer appointments within 1–3 days, depending on the doctor's schedule.\n\nContact us for the earliest available slot!"
+
+  utter_walk_in:
+    - text: "🚶 **Walk-ins:**\n\nWe prioritize appointments, but we do accommodate walk-ins when the doctor is available.\n\nBooking an appointment ensures you get dedicated time with the doctor."
+
+  utter_consultation_duration:
+    - text: "⏰ **Consultation Duration:**\n\nConsultations typically last 30–45 minutes, depending on your case.\n\nWe ensure enough time to understand your health concerns thoroughly."
+
+  utter_cancellation_policy:
+    - text: "📋 **Cancellation Policy:**\n\nYes, we request cancellations or rescheduling at least 24 hours in advance.\n\nPlease notify us as soon as possible if you need to cancel."
+
+  utter_reschedule:
+    - text: "🔄 **Rescheduling:**\n\nAbsolutely! You can reschedule anytime through WhatsApp or by calling the clinic.\n\nWe'll find a new time that works for you."
+
+  # ===== PRICING & PAYMENT RESPONSES =====
+  utter_pricing:
+    - text: "💰 **Consultation Price:**\n\nOur consultation fee starts at 350 AED.\n\nLab tests and supplements are charged separately."
+
+  utter_followup_pricing:
+    - text: "💰 **Follow-up Visits:**\n\nYes, follow-up consultations are usually offered at a reduced rate.\n\nFollow-ups are typically scheduled 4–6 weeks after your initial consultation."
+
+  utter_packages:
+    - text: "📦 **Consultation Packages:**\n\nWe offer a range of health packages that include:\n• Follow-ups\n• Lab tests\n• Personalized plans\n\nContact us for package details and pricing!"
+
+  utter_insurance:
+    - text: "🏥 **Insurance:**\n\nWe accept reimbursement-based insurance claims and can provide the required documents.\n\nPlease contact us with your insurance details to verify coverage."
+
+  utter_payment_methods:
+    - text: "💳 **Payment Methods:**\n\nWe accept:\n• Cash\n• Card (Credit/Debit)\n• Bank transfer\n• Online payment links\n\nPayment is due at the time of consultation."
+
+  utter_lab_cost:
+    - text: "🔬 **Lab Testing Costs:**\n\nLab tests are charged separately unless included in a package.\n\nCosts vary based on the type of test and panel complexity.\n\nWe'll discuss and recommend tests during your consultation."
+
+  utter_treatment_cost:
+    - text: "💊 **Treatment & Supplements:**\n\nYes, supplements and specialized treatments are billed separately.\n\nCosts depend on your specific needs and treatment duration.\n\nWe'll provide a clear breakdown during your consultation."
+
+  # ===== LAB TESTS & MEDICAL REQUIREMENTS =====
+  utter_bring_tests:
+    - text: "📋 **Previous Lab Tests:**\n\nIf you have recent test results, please bring them — they help the doctor understand your case better.\n\nBring:\n• Recent lab results\n• Medical reports\n• Medication list\n• Previous diagnoses"
+
+  utter_tests_needed:
+    - text: "🔬 **Pre-Consultation Tests:**\n\nNot necessarily. The doctor will advise tests based on your symptoms and medical history.\n\nNo specific tests are required before your first visit."
+
+  utter_lab_at_clinic:
+    - text: "🏥 **Lab Testing at Clinic:**\n\nYes, we offer a full range of lab tests directly at our clinic or through our partner laboratories.\n\nThe doctor will recommend which tests you need after consultation."
+
+  utter_lab_results_time:
+    - text: "⏱️ **Lab Results Timing:**\n\nMost results are ready within 24–48 hours, while specialized tests may take longer.\n\nDepends on test type:\n• Basic blood work: 24-48 hours\n• Advanced panels: 3-7 days\n• Specialized tests: 1-2 weeks"
+
+  utter_test_guidance:
+    - text: "**Test Guidance:**\n\nAbsolutely! The doctor will recommend only the tests that are relevant to your condition.\n\nRecommendations based on:\n• Your symptoms\n• Medical history\n• Health goals"
+
+  utter_repeat_tests:
+    - text: "🔄 **Repeating Tests:**\n\nIf results are older than 3–6 months or don't reflect your current symptoms, we may recommend repeating them.\n\nRecent tests (< 3-6 months) are usually accepted."
+
+  utter_functional_tests:
+    - text: "🔬 **Functional Tests:**\n\nYes, we provide a variety of advanced functional medicine tests, including:\n\n• Hormone panels\n• Gut health tests\n• Food sensitivity/intolerance\n• Stool analysis\n• Organic acids test\n• Heavy metals screening\n\nThe doctor will recommend based on your needs."
+
+  # ===== TREATMENT APPROACH =====
+  utter_functional_medicine:
+    - text: "🌿 **What is Functional Medicine?**\n\nFunctional medicine focuses on identifying and treating the root cause of a condition, not just the symptoms.\n\nIt combines:\n• Medical science\n• Nutrition\n• Lifestyle changes\n• Personalized care\n\n**vs Traditional Medicine:**\n• Traditional: Often treats symptoms with standard protocols\n• Functional: Finds and treats the underlying cause"
+
+  utter_conditions_treated:
+    - text: "🏥 **Conditions We Treat:**\n\nWe treat a wide range of concerns including:\n\n• Gut health issues\n• Hormonal imbalance\n• Chronic fatigue\n• Weight concerns\n• Autoimmune conditions\n• Metabolic disorders\n• Skin issues\n• Stress-related conditions\n\nAnd more! Contact us to discuss your specific concern."
+
+  utter_treatment_methods:
+    - text: "🌿 **Treatment Methods:**\n\nTreatment plans are personalized and may include:\n\n• Supplements\n• Nutrition guidance\n• Lifestyle changes\n• Medical treatment (when needed)\n\nWe create customized protocols based on your unique needs."
+
+  utter_improvement_time:
+    - text: "⏰ **Timeline for Improvement:**\n\nIt varies by condition, but many patients notice changes within 2–6 weeks.\n\nSome patients see improvements quickly, while others need more time for deeper healing.\n\nWe monitor progress and adjust treatment accordingly."
+
+  utter_followup_frequency:
+    - text: "📅 **Follow-up Frequency:**\n\nMost patients follow up every 4–6 weeks, depending on their progress.\n\nFrequency depends on:\n• Your condition\n• Treatment response\n• Health goals\n\nWe customize the schedule based on your needs."
+
+  utter_specialist_coordination:
+    - text: "🤝 **Working with Specialists:**\n\nYes, we collaborate with other medical specialists when additional support is required.\n\nWe coordinate care and share information to ensure comprehensive treatment for you."
+
+  # ===== COMMUNICATION & FOLLOW-UP =====
+  utter_contact:
+    - text: "📞 **Contact Information:**\n\nYou can reach us through:\n• WhatsApp: +971501234567\n• Phone: +971501234567\n• Email: info@functionalmedclinic.ae\n• Our website\n\nWe're here to help!"
+
+  utter_whatsapp:
+    - text: "📱 **WhatsApp Support:**\n\nYes, our team is available on WhatsApp for:\n• Quick questions\n• Appointment support\n• Booking assistance\n• Sharing lab results\n\nWhatsApp: +971501234567"
+
+  utter_send_results:
+    - text: "📧 **Sending Lab Results:**\n\nDefinitely! You can send them through WhatsApp or email so the doctor can review them in advance.\n\nSend via:\n• WhatsApp: +971501234567\n• Email: info@functionalmedclinic.ae"
+
+  utter_doctor_followup:
+    - text: "✅ **Doctor Follow-up:**\n\nYes, we provide follow-up support and review your progress during your next appointment.\n\nFollow-up includes:\n• Review of lab results\n• Progress assessment\n• Treatment adjustments"
+
+  utter_followup_cost:
+    - text: "💰 **Follow-up Billing:**\n\nThis depends on your package. Some follow-ups are included; others are billed separately.\n\nContact us for details about your specific package."
+
+  utter_urgent_questions:
+    - text: "🚨 **Urgent Questions:**\n\nFor urgent concerns, you can contact us via WhatsApp or phone, and we will assist you promptly.\n\n• WhatsApp: +971501234567\n• Phone: +971501234567\n\nFor medical emergencies, please visit the nearest ER."
+
+  # ===== MISCELLANEOUS =====
+  utter_age_groups:
+    - text: "👨‍👩‍👧‍👦 **Age Groups:**\n\nWe treat adults, and we see children on a case-by-case basis depending on their condition.\n\nContact us to discuss your family's needs."
+
+  utter_chronic_conditions:
+    - text: "🏥 **Chronic Conditions:**\n\nYes, we specialize in managing and improving chronic conditions through a holistic approach.\n\nOur root-cause approach is ideal for:\n• Autoimmune diseases\n• Diabetes\n• Thyroid disorders\n• Chronic fatigue\n• Long-term hormonal issues\n\nAnd more!"
+
+  utter_health_plans:
+    - text: "📋 **Long-term Health Plans:**\n\nYes, we design personalized long-term wellness plans based on your goals and health status.\n\nIncludes:\n• Health goals setting\n• Nutrition optimization\n• Lifestyle modifications\n• Regular monitoring\n• Progress tracking"
+
+  utter_specific_conditions:
+    - text: "💪 **Specific Conditions:**\n\nAbsolutely! These are some of the most common concerns we treat:\n\n✅ Weight loss\n✅ Gut health\n✅ Fatigue\n✅ Hormonal imbalance\n\nBook a consultation to discuss your specific needs!"
+
+  utter_location:
+    - text: "📍 **Clinic Location:**\n\n🏥 Functional Medicine Clinics\nDubai Healthcare City\n\n⏰ **Hours:**\n• Thursday: 9:00 AM - 5:00 PM\n• Saturday: 9:00 AM - 5:00 PM"
+
+  utter_iamabot:
+    - text: "🤖 **I'm an AI Assistant!**\n\nI'm here to help answer your questions about our clinic and services.\n\nFor personalized medical advice, please book a consultation with our doctor."
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

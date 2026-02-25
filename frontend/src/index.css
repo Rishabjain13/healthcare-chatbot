@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+:root {
+  --green-primary: #0F766E;
+  --green-light: #ECFDF5;
+  --green-muted: #D1FAE5;
+  --text-dark: #0F172A;
+}
+
+body {
+  margin: 0;
+  background-color: var(--green-light);
+  color: var(--text-dark);
+  font-family: 'Satoshi', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Button hover enhancement */
+button {
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+button:focus-visible {
+  outline: 2px solid var(--green-primary);
+  outline-offset: 2px;
+}
+/* Chat scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--green-primary);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #0d6b63; /* slightly darker green */
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--green-primary) transparent;
+}
+/* --- Typing indicator sized exactly like bot icon --- */
+.typing-icon-pill {
+  width: 36px;                  /* 🔥 same as h-9 */
+  height: 36px;
+  background-color: #ffffff;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;                     /* tight dot spacing */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* Dots */
+.typing-icon-pill span {
+  width: 6px;                   /* 🔥 proportional dots */
+  height: 6px;
+  background-color: var(--green-primary);
+  border-radius: 50%;
+  animation: typingPulse 1.4s infinite ease-in-out;
+  opacity: 0.3;
+}
+
+.typing-icon-pill span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-icon-pill span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingPulse {
+  0% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+}

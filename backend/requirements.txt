@@ -1,0 +1,39 @@
+# Web Framework (FastAPI instead of Flask)
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Environment & Configuration
+python-dotenv==1.0.0
+pyyaml==6.0.1
+
+# HTTP Requests
+requests==2.31.0
+
+# AI & NLU
+openai>=1.109.1
+
+# Communication
+twilio==8.10.0
+
+# Geolocation & Geocoding
+geopy==2.4.1
+
+# Google Calendar Integration
+google-api-python-client==2.116.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.0
+
+# Data Validation
+pydantic==2.5.3
+
+# Date/Time Parsing
+python-dateutil==2.8.2
+
+# Rasa SDK (for custom actions)
+rasa-sdk==3.7.0
+
+# RAG (Retrieval-Augmented Generation) Dependencies - DISABLED
+# sentence-transformers==2.2.2
+# faiss-cpu==1.7.4
+# numpy==1.24.3

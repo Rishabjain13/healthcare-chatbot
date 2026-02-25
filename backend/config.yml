@@ -1,0 +1,426 @@
+# =============================================================================
+# CLINIC CONFIGURATION - Customize for any healthcare business
+# =============================================================================
+
+clinic:
+  name: "Functional Medicine Clinics"
+  tagline: "Root Cause Healthcare"
+  type: "functional_medicine"  # Options: general_practice, dental, physiotherapy, etc.
+
+# Contact Information
+contact:
+  phone: "+971 50 123 4567"
+  whatsapp: "+971 50 123 4567"
+  email: "info@functionalmedclinics.ae"
+  website: "www.functionalmedclinics.ae"
+  health_records_email: "healthrecords@functionalmedclinics.ae"
+
+# Location
+location:
+  city: "Cairo – Dubai"
+  area: "Dubai Healthcare City"
+  building: "Building 64"
+  clinic_number: "Clinic 123"
+  address: "Building 64, Clinic 123, Dubai Healthcare City, Dubai, UAE"
+  cairo_address: "Cairo Office Location (Contact for details)"
+  parking: true
+  metro_station: "Healthcare City Station"
+  google_maps_link: "https://maps.google.com/..."
+  note: "Serving patients in both Cairo and Dubai"
+
+# Working Hours
+hours:
+  timezone: "Asia/Dubai"
+  schedule:
+    # Online appointments (Zoom)
+    - day: "Thursday"
+      open: "09:00"
+      close: "17:00"
+      appointment_type: "online"
+    - day: "Saturday"
+      open: "09:00"
+      close: "17:00"
+      appointment_type: "online"
+    # Offline appointments (In-person at Cairo – Dubai)
+    - day: "Monday"
+      open: "09:00"
+      close: "17:00"
+      appointment_type: "offline"
+    - day: "Tuesday"
+      open: "09:00"
+      close: "17:00"
+      appointment_type: "offline"
+    - day: "Wednesday"
+      open: "09:00"
+      close: "17:00"
+      appointment_type: "offline"
+    - day: "Friday"
+      open: "09:00"
+      close: "17:00"
+      appointment_type: "offline"
+  closed_days: ["Sunday"]
+  display_format: |
+    📅 **OFFLINE (In-Person) - Cairo/Dubai:**
+    Monday, Tuesday, Wednesday, Friday: 9:00 AM - 5:00 PM
+
+    💻 **ONLINE (Zoom Consultations):**
+    Thursday, Saturday: 9:00 AM - 5:00 PM
+
+    💤 Closed: Sunday
+
+# Pricing - Location-Based
+pricing:
+  currency: "AED"
+
+  # Default pricing (used if location not detected)
+  default_location: "Other"
+
+  # Location-based pricing zones
+  locations:
+    # Primary custom locations
+    India:
+      name: "India"
+      consultation:
+        initial: 300
+        followup: 150
+        emergency: 450
+      packages:
+        - name: "Starter Pack"
+          description: "Initial + 2 follow-ups"
+          price: 550
+          savings: 50
+          validity_months: 6
+        - name: "Complete Care"
+          description: "Initial + 4 follow-ups"
+          price: 900
+          savings: 150
+          validity_months: 6
+
+    Dubai:
+      name: "Dubai Healthcare City"
+      consultation:
+        initial: 450
+        followup: 250
+        emergency: 650
+      packages:
+        - name: "Starter Pack"
+          description: "Initial + 2 follow-ups"
+          price: 850
+          savings: 100
+          validity_months: 6
+        - name: "Complete Care"
+          description: "Initial + 4 follow-ups"
+          price: 1400
+          savings: 200
+          validity_months: 6
+        - name: "Premium"
+          description: "Initial + 6 follow-ups + labs"
+          price: 2200
+          savings: 400
+          validity_months: 6
+
+    Cairo:
+      name: "Cairo"
+      consultation:
+        initial: 345
+        followup: 180
+        emergency: 500
+      packages:
+        - name: "Starter Pack"
+          description: "Initial + 2 follow-ups"
+          price: 650
+          savings: 55
+          validity_months: 6
+        - name: "Complete Care"
+          description: "Initial + 4 follow-ups"
+          price: 1065
+          savings: 155
+          validity_months: 6
+
+    # UAE Cities
+    "Abu Dhabi":
+      name: "Abu Dhabi"
+      consultation:
+        initial: 320
+        followup: 180
+        emergency: 450
+      packages:
+        - name: "Starter Pack"
+          description: "Initial + 2 follow-ups"
+          price: 590
+          savings: 90
+          validity_months: 6
+        - name: "Complete Care"
+          description: "Initial + 4 follow-ups"
+          price: 950
+          savings: 180
+          validity_months: 6
+        - name: "Premium"
+          description: "Initial + 6 follow-ups + labs"
+          price: 1650
+          savings: 370
+          validity_months: 6
+
+    Sharjah:
+      name: "Sharjah"
+      consultation:
+        initial: 280
+        followup: 150
+        emergency: 400
+      packages:
+        - name: "Starter Pack"
+          description: "Initial + 2 follow-ups"
+          price: 520
+          savings: 80
+          validity_months: 6
+        - name: "Complete Care"
+          description: "Initial + 4 follow-ups"
+          price: 850
+          savings: 170
+          validity_months: 6
+        - name: "Premium"
+          description: "Initial + 6 follow-ups + labs"
+          price: 1500
+          savings: 350
+          validity_months: 6
+
+    Ajman:
+      name: "Ajman"
+      consultation:
+        initial: 250
+        followup: 140
+        emergency: 380
+      packages:
+        - name: "Starter Pack"
+          description: "Initial + 2 follow-ups"
+          price: 470
+          savings: 75
+          validity_months: 6
+        - name: "Complete Care"
+          description: "Initial + 4 follow-ups"
+          price: 780
+          savings: 160
+          validity_months: 6
+        - name: "Premium"
+          description: "Initial + 6 follow-ups + labs"
+          price: 1380
+          savings: 330
+          validity_months: 6
+
+    "Ras Al Khaimah":
+      name: "Ras Al Khaimah"
+      consultation:
+        initial: 250
+        followup: 140
+        emergency: 380
+      packages:
+        - name: "Starter Pack"
+          description: "Initial + 2 follow-ups"
+          price: 470
+          savings: 75
+          validity_months: 6
+        - name: "Complete Care"
+          description: "Initial + 4 follow-ups"
+          price: 780
+          savings: 160
+          validity_months: 6
+        - name: "Premium"
+          description: "Initial + 6 follow-ups + labs"
+          price: 1380
+          savings: 330
+          validity_months: 6
+
+    "Umm Al Quwain":
+      name: "Umm Al Quwain"
+      consultation:
+        initial: 240
+        followup: 130
+        emergency: 360
+      packages:
+        - name: "Starter Pack"
+          description: "Initial + 2 follow-ups"
+          price: 450
+          savings: 70
+          validity_months: 6
+        - name: "Complete Care"
+          description: "Initial + 4 follow-ups"
+          price: 740
+          savings: 150
+          validity_months: 6
+        - name: "Premium"
+          description: "Initial + 6 follow-ups + labs"
+          price: 1320
+          savings: 310
+          validity_months: 6
+
+    Fujairah:
+      name: "Fujairah"
+      consultation:
+        initial: 240
+        followup: 130
+        emergency: 360
+      packages:
+        - name: "Starter Pack"
+          description: "Initial + 2 follow-ups"
+          price: 450
+          savings: 70
+          validity_months: 6
+        - name: "Complete Care"
+          description: "Initial + 4 follow-ups"
+          price: 740
+          savings: 150
+          validity_months: 6
+        - name: "Premium"
+          description: "Initial + 6 follow-ups + labs"
+          price: 1320
+          savings: 310
+          validity_months: 6
+
+    # Default fallback for all other locations
+    Other:
+      name: "Other Locations"
+      consultation:
+        initial: 500
+        followup: 300
+        emergency: 700
+      packages:
+        - name: "Starter Pack"
+          description: "Initial + 2 follow-ups"
+          price: 1000
+          savings: 100
+          validity_months: 6
+        - name: "Complete Care"
+          description: "Initial + 4 follow-ups"
+          price: 1700
+          savings: 200
+          validity_months: 6
+
+# Doctor Information
+doctors:
+  - name: "Dr. Rania Said"
+    full_name: "Dr. Rania Said"
+    title: "Pediatrician | Functional Medicine Specialist | Clinical Nutritionist"
+    qualifications: "MD, Pediatrician, Certified in Functional Medicine – IFM (Institute for Functional Medicine), Clinical Nutritionist"
+    specialties:
+      - "Digestive health & gut issues"
+      - "Hormonal imbalances"
+      - "Chronic fatigue"
+      - "Autoimmune conditions"
+      - "Metabolic health"
+    languages: ["English", "Arabic"]
+    locations: ["Cairo", "Dubai"]
+    experience_years: 10
+    approach: "Root cause analysis and personalized treatment plans"
+
+# Services & Specialties
+services:
+  consultation_types:
+    - "In-person consultation"
+    - "Virtual consultation (Zoom video call)"
+    - "Follow-up consultation"
+    - "Emergency consultation"
+
+  virtual_consultation:
+    platform: "Zoom"
+    note: "Online consultations via Zoom available on Thursday & Saturday, 9 AM - 5 PM"
+    booking_process: "Book your preferred time slot and we'll send you a Zoom link"
+    same_pricing: true
+
+  in_person_consultation:
+    note: "In-person consultations at our clinics in Cairo and Dubai available Monday, Tuesday, Wednesday, Friday, 9 AM - 5 PM"
+    locations: ["Cairo", "Dubai"]
+
+  specialties:
+    - "Digestive health (IBS, bloating, SIBO)"
+    - "Hormonal imbalances (thyroid, PCOS, menopause)"
+    - "Chronic fatigue & energy issues"
+    - "Weight management & metabolic health"
+    - "Autoimmune conditions"
+    - "Nutritional deficiencies"
+    - "Stress & adrenal issues"
+    - "Sleep disorders"
+
+  treatment_methods:
+    - "Personalized nutrition plans"
+    - "Targeted supplementation"
+    - "Lifestyle modifications"
+    - "Stress management"
+    - "Sleep optimization"
+    - "Exercise guidance"
+    - "Medication (when necessary)"
+
+# Lab Testing
+lab_testing:
+  onsite_blood_draw: true
+  partner_labs: true
+  results_timing:
+    standard_blood: "2-3 days"
+    comprehensive_panels: "3-5 days"
+    functional_tests: "7-14 days"
+    stool_hormone: "10-14 days"
+
+  available_tests:
+    - "Comprehensive blood panels"
+    - "Food sensitivity panels (IgG)"
+    - "Hormone testing (saliva/blood)"
+    - "Gut microbiome analysis"
+    - "Stool testing (SIBO, parasites)"
+    - "Toxic metal screening"
+    - "Nutrient deficiency panels"
+    - "Genetic testing (methylation)"
+
+# Appointment Settings
+appointments:
+  initial_duration_minutes: 30
+  followup_duration_minutes: 20  # Can range 20-30 minutes
+  followup_duration_max_minutes: 30
+  complex_case_duration_minutes: 60
+  booking_advance_days: 60  # How far ahead patients can book
+  cancellation_hours: 24
+  cancellation_fee_percent: 50
+  average_wait_days:
+    urgent: "1-2 days"
+    regular: "3-5 days"
+    followup: "1-3 days"
+  duration_note: "Standard consultations are 30 minutes, follow-ups 20-30 minutes, and complex cases up to 60 minutes"
+
+# Payment Options
+payment:
+  methods:
+    - "Cash"
+    - "Credit/Debit Cards (Visa, Mastercard, Amex)"
+    - "Bank Transfer"
+    - "Apple Pay / Samsung Pay"
+  insurance:
+    accepted: true
+    direct_billing: true
+    note: "Coverage varies by plan - please verify before visit"
+
+# Google Calendar Settings (for appointment booking)
+google_calendar:
+  enabled: true  # ✅ ENABLED - Set to true after setup
+  calendar_id: "primary"  # "primary" = your main calendar
+  credentials_file: "google_credentials.json"
+  token_file: "google_token.json"
+
+# Communication Settings
+communication:
+  whatsapp_support: true
+  email_support: true
+  response_time_hours: "2-3 hours during business hours"
+  quick_questions_free: true
+  quick_questions_max_minutes: 10
+
+# Age Groups Accepted
+age_groups:
+  adults: true
+  adolescents: true
+  children: true
+  pediatric_note: "Children accepted case by case with parent consent"
+
+# Bot Personality
+bot:
+  personality: "professional"  # Options: friendly, professional, casual
+  use_emojis: false
+  language_support: ["English", "Arabic"]
+  greeting_style: "professional"

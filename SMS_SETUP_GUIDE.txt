@@ -1,0 +1,127 @@
+=========================================================================
+📱 SMS CHATBOT SETUP - Simple 3-Step Guide
+=========================================================================
+
+Your Setup:
+✅ Twilio Number: +1 269 466 1977
+✅ Backend updated with SMS webhook
+✅ Credentials configured
+
+Now follow these 3 steps to make it work:
+
+=========================================================================
+STEP 1: Start Your Servers (2 terminals)
+=========================================================================
+
+Terminal 1 - RASA (Already Running ✅)
+--------------------------------------
+If not running, start with:
+  cd ~/Desktop/healthcare-chatbot/rasa-bot
+  rasa run --enable-api --cors "*" --port 5005
+
+
+Terminal 2 - Backend Server
+----------------------------
+  cd ~/Desktop/healthcare-chatbot/backend
+  python3 server.py
+
+You should see: "🚀 Healthcare Chatbot Backend Started!"
+
+=========================================================================
+STEP 2: Make Server Public with ngrok (New Terminal 3)
+=========================================================================
+
+Install ngrok (if not installed):
+  brew install ngrok
+
+Start ngrok:
+  ngrok http 3000
+
+You'll see something like:
+  ┌─────────────────────────────────────────────────────────┐
+  │ Forwarding  https://abc123.ngrok.io -> localhost:3000  │
+  └─────────────────────────────────────────────────────────┘
+
+COPY the https://abc123.ngrok.io URL (yours will be different!)
+
+=========================================================================
+STEP 3: Configure Twilio Number
+=========================================================================
+
+1. Go to: https://console.twilio.com/us1/develop/phone-numbers/manage/incoming
+
+2. Click on your number: +1 269 466 1977
+
+3. Scroll to "Messaging Configuration"
+
+4. Under "A MESSAGE COMES IN":
+   - Select: Webhook
+   - Paste: https://your-ngrok-url.ngrok.io/sms/webhook
+     (Replace with YOUR ngrok URL + /sms/webhook)
+   - Method: HTTP POST
+
+5. Click "Save"
+
+=========================================================================
+STEP 4: TEST IT! 🎉
+=========================================================================
+
+From ANY phone:
+1. Send SMS to: +1 269 466 1977
+2. Type: "hello"
+3. Wait for the bot's response!
+
+Try these messages:
+- "hello"
+- "what are your hours"
+- "how much does it cost"
+- "do you accept insurance"
+- "مرحبا" (Arabic)
+
+=========================================================================
+DEMO TO YOUR TEAM
+=========================================================================
+
+Simply tell them:
+"Text this number: +1 269 466 1977"
+
+They can text from ANY phone - no sandbox, no join code needed!
+
+=========================================================================
+TROUBLESHOOTING
+=========================================================================
+
+❌ No response from bot?
+  Check Terminal 2 - you should see logs when message arrives
+
+❌ Webhook error?
+  Make sure ngrok URL ends with /sms/webhook
+  Example: https://abc123.ngrok.io/sms/webhook
+
+❌ RASA not responding?
+  Check Terminal 1 - RASA must be running on port 5005
+
+❌ Backend error?
+  Restart backend server (Terminal 2)
+
+=========================================================================
+QUICK COMMANDS REFERENCE
+=========================================================================
+
+# Start RASA
+cd ~/Desktop/healthcare-chatbot/rasa-bot
+rasa run --enable-api --cors "*" --port 5005
+
+# Start Backend
+cd ~/Desktop/healthcare-chatbot/backend
+python3 server.py
+
+# Start ngrok
+ngrok http 3000
+
+=========================================================================
+
+Need help? Check the logs in your terminal windows!
+They show exactly what's happening when messages arrive.
+
+=========================================================================

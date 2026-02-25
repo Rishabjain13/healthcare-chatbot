@@ -1,0 +1,25 @@
+# Dockerfile for Rasa Actions Server - Production Linux Build
+# Optimized for GCP/Cloud deployment
+# Platform: linux/amd64
+
+FROM --platform=linux/amd64 rasa/rasa-sdk:3.6.0
+
+# Set working directory
+WORKDIR /app
+
+# Copy actions
+COPY actions /app/actions
+
+# Install additional dependencies if needed
+# COPY requirements-actions.txt .
+# RUN pip install --no-cache-dir -r requirements-actions.txt
+
+# Expose actions port
+EXPOSE 5055
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD python -c "import socket; s = socket.socket(); s.connect(('localhost', 5055)); s.close()"
+
+# Run actions server
+CMD ["start", "--actions", "actions"]

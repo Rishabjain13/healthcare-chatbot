@@ -1,0 +1,54 @@
+# Environment variables
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Rasa
+.rasa/
+*.tar.gz
+rasa-bot/models/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node modules
+node_modules/
+
+# Logs
+*.log
+
+# Google Calendar Credentials (IMPORTANT: Never commit these!)
+google_credentials.json
+google_token.json
+google_token.pickle
+*credentials.json
+*token*.json
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Test files
+test_*.py
+test_*.sh
+debug_*.py
+diagnose_*.py
