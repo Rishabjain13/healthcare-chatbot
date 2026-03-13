@@ -1,43 +1,33 @@
-import Logo from './Logo'
+import logo from '../assets/logo.png'
 import { useDispatch } from 'react-redux'
 import { resetChat } from '../store/slices/chatSlice'
+import { RotateCcw } from 'lucide-react'
 
 export default function ChatHeader() {
   const dispatch = useDispatch()
-
   return (
-    <header
-      className="flex items-center justify-between px-6 h-16 shadow"
-      style={{ backgroundColor: 'var(--green-primary)' }}
-    >
-      <div className="flex items-center gap-3 text-white">
-        <Logo />
-        <div>
-          <div className="font-semibold">Dr Rania Said</div>
-          <div className="text-xs opacity-90">
-            Functional Medicine Clinics
+    <header className="hdr">
+      <div className="hdr-inner">
+        <div className="hdr-brand">
+          <div className="hdr-logo">
+            <img src={logo} alt="Dr. Rania Said" />
+          </div>
+          <div>
+            <div className="hdr-name">Dr. Rania Said</div>
+            <div className="hdr-sub">Functional Medicine Clinics</div>
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-white font-medium">
-            AI Medical Assistant
-        </span>
-
-        <button
-            onClick={() => dispatch(resetChat())}
-            className="
-            h-8 px-3 rounded-md
-            text-xs font-medium
-            border border-white/40
-            text-white
-            hover:bg-white/10
-            transition
-            "
-        >
+        <div className="hdr-right">
+          <div className="online-pill">
+            <span className="online-dot" />
+            <span className="online-lbl">AI Medical Assistant</span>
+          </div>
+          <button className="btn-new" onClick={() => dispatch(resetChat())}>
+            <RotateCcw size={12} strokeWidth={2.3} />
             New Chat
-        </button>
+          </button>
+        </div>
       </div>
     </header>
   )

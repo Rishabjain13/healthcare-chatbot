@@ -1,172 +1,118 @@
+import { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { sendMessage } from '../store/slices/chatSlice'
-import { Bot, User } from 'lucide-react'
+import { Hospital, User } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 
 export default function ChatMessage({
-  role,
-  text,
-  options,
-  actions,
-  buttons,
-  showDatePicker,
-  createdAt
+  role, text, options, actions, buttons, createdAt,
+  isFirst = true, isGrouped = false, isLast = true,
 }) {
   const isUser = role === 'user'
   const dispatch = useDispatch()
+  const [pillUsed, setPillUsed] = useState(false)
 
-  /**
-   * ✅ Normalize options into:
-   * { label: string, payload: string }
-   * This is CRITICAL for backend intent handling
-   */
-  const resolvedOptions = (
+  const opts = (
     options ||
     buttons?.map(b => ({
-      label: b.title ?? b.label ?? b,
-      payload: b.payload ?? b.value ?? b.title ?? b
+      label:   b.title   ?? b.label   ?? b,
+      payload: b.payload ?? b.value   ?? b.title ?? b,
     })) ||
     (actions?.type === 'show_options'
-      ? actions.options.map(o => ({
-          label: o.label ?? o,
-          payload: o.payload ?? o
-        }))
+      ? actions.options.map(o => ({ label: o.label ?? o, payload: o.payload ?? o }))
       : [])
   )
 
-  /**
-   * 📅 Show date picker ONLY when backend explicitly asks
-   * and there are no option buttons visible
-   */
-  const shouldShowDatePicker =
-    actions?.type === 'pick_date' &&
-    (!resolvedOptions || resolvedOptions.length === 0)
+  const showDate = actions?.type === 'pick_date' && (!opts || opts.length === 0)
+
+  const rowCls = [
+    'row',
+    isUser    ? 'row--user'    : 'row--bot',
+    isFirst   ? 'row--first'   : '',
+    isGrouped ? 'row--grouped' : '',
+  ].filter(Boolean).join(' ')
+
+  const time = createdAt
+    ? new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : null
 
   return (
-    <div
-      className={`flex gap-3 items-start ${
-        isUser ? 'justify-end' : 'justify-start'
-      }`}
-    >
-      {/* 🤖 Bot avatar */}
+    <div className={rowCls}>
+
+      {/* Bot avatar — always in DOM, hidden when grouped (preserves spacing) */}
       {!isUser && (
-        <div
-          className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-white"
-          style={{ backgroundColor: 'var(--green-primary)' }}
-        >
-          <Bot size={18} strokeWidth={1.75} />
+        <div className="avatar avatar--bot">
+          <Hospital size={16} strokeWidth={2} />
         </div>
       )}
 
-      {/* 💬 Message bubble */}
-      <div
-        className="max-w-[65%] px-4 py-3 rounded-xl text-sm shadow"
-        style={{
-          backgroundColor: isUser ? 'var(--green-primary)' : '#ffffff',
-          color: isUser ? '#ffffff' : 'var(--text-dark)'
-        }}
-      >
-        {/* 🔥 Message text (Markdown for bot, plain for user) */}
-        {isUser ? (
-          <div>{text}</div>
-        ) : (
-          <ReactMarkdown
-            components={{
-              strong: ({ children }) => (
-                <strong className="font-semibold">{children}</strong>
-              ),
-              em: ({ children }) => (
-                <em className="italic">{children}</em>
-              ),
-              ul: ({ children }) => (
-                <ul className="list-disc ml-4 mt-2 space-y-1">
-                  {children}
-                </ul>
-              ),
-              li: ({ children }) => <li>{children}</li>,
-              p: ({ children }) => (
-                <p className="mb-1 last:mb-0">{children}</p>
-              )
-            }}
-          >
-            {text}
-          </ReactMarkdown>
-        )}
+      {/* Bubble + timestamp */}
+      <div className="bcol">
+        <div className={`bubble ${isUser ? 'bubble--user' : 'bubble--bot'}`}>
 
-        {/* 🔘 Option buttons */}
-        {resolvedOptions?.length > 0 && (
-          <div className="flex gap-2 mt-3 flex-wrap">
-            {resolvedOptions.map((opt, index) => (
-              <button
-                key={`${opt.label}-${index}`}
-                onClick={() =>
-                  dispatch(
-                    sendMessage(
-                      opt.label,   // 👈 what user sees
-                      opt.payload  // 👈 what backend receives
-                    )
-                  )
-                }
-                className="px-3 py-1 rounded-full text-xs border"
-                style={{
-                  borderColor: 'var(--green-primary)',
-                  color: 'var(--green-primary)'
-                }}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        )}
+          {isUser ? (
+            <span>{text}</span>
+          ) : (
+            <ReactMarkdown
+              components={{
+                strong: ({ children }) => <strong>{children}</strong>,
+                em:     ({ children }) => <em>{children}</em>,
+                ul:     ({ children }) => <ul>{children}</ul>,
+                ol:     ({ children }) => <ol>{children}</ol>,
+                li:     ({ children }) => <li>{children}</li>,
+                p:      ({ children }) => <p>{children}</p>,
+                a:      ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noreferrer">{children}</a>
+                ),
+              }}
+            >
+              {text}
+            </ReactMarkdown>
+          )}
 
-        {/* 📅 Date picker */}
-        {shouldShowDatePicker && (
-          <div className="mt-3">
+          {opts?.length > 0 && (
+            <div className="pills">
+              {opts.map((opt, i) => (
+                <button
+                  key={`${opt.label}-${i}`}
+                  className={`pill${pillUsed ? ' pill--used' : ''}`}
+                  disabled={pillUsed}
+                  onClick={() => {
+                    if (pillUsed) return
+                    setPillUsed(true)
+                    dispatch(sendMessage(opt.label, opt.payload))
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {showDate && (
             <input
               type="date"
-              className="border rounded-lg px-3 py-2 text-sm hover:bg-[var(--green-muted)]"
-              onChange={(e) => {
-                const raw = e.target.value
-                if (!raw) return
-
-                const date = new Date(raw + 'T00:00:00')
-
-                // ✅ Backend-friendly format
-                const formatted = date.toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'short',
-                  day: '2-digit'
-                })
-
-                dispatch(sendMessage(formatted))
+              onChange={e => {
+                if (!e.target.value) return
+                const d = new Date(e.target.value + 'T00:00:00')
+                dispatch(sendMessage(
+                  d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: '2-digit' })
+                ))
               }}
             />
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* ⏱ Optional timestamp */}
-        {createdAt && (
-          <div className="mt-1 text-[10px] opacity-50 text-right">
-            {new Date(createdAt).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
-          </div>
-        )}
+        {time && isLast && <div className="ts">{time}</div>}
       </div>
 
-      {/* 👤 User avatar */}
+      {/* User avatar — always in DOM */}
       {isUser && (
-        <div
-          className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center shadow"
-          style={{
-            backgroundColor: '#ffffff',
-            border: '2px solid var(--green-primary)'
-          }}
-        >
-          <User size={18} strokeWidth={1.75} />
+        <div className="avatar avatar--user">
+          <User size={15} strokeWidth={2} />
         </div>
       )}
+
     </div>
   )
 }

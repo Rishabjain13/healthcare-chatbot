@@ -6,34 +6,35 @@ FROM python:3.10-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install minimal system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file
+# Copy dependency file first (layer caching)
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip + install dependencies
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy backend source code
 COPY . .
 
-# Create directory for Google credentials if needed
-RUN mkdir -p /app/credentials
+# Create runtime directories (mounted as volumes)
+RUN mkdir -p /app/logs /app/credentials
 
-# Expose FastAPI port
+# Expose API port
 EXPOSE 3000
 
-# Environment variables (overridden by docker-compose or .env)
-ENV PORT=3000
-ENV RASA_URL=http://rasa:5005
+# Environment safety
+ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PORT=3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:3000/health || exit 1
 
-# Run FastAPI with uvicorn
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000", "--reload"]
+# Start FastAPI (PRODUCTION MODE)
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000"]

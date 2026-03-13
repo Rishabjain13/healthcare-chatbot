@@ -8,11 +8,12 @@ from datetime import datetime, timedelta
 from typing import Dict, Optional, List
 from dotenv import load_dotenv
 
-from fastapi import FastAPI, Request, Form, HTTPException
+from fastapi import FastAPI, Request, Form, HTTPException, BackgroundTasks
 from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+import pytz
 import requests
 from openai import OpenAI
 from twilio.rest import Client
@@ -21,6 +22,7 @@ from config_loader import get_config
 from google_calendar_service import get_calendar_service
 from agents import AgentRouter
 from location_service import get_location_service
+from rag_service import get_rag_service
 
 # Load environment variables
 load_dotenv()
@@ -64,6 +66,7 @@ app.add_middleware(
 config = get_config()
 calendar_service = get_calendar_service()
 location_service = get_location_service()
+rag_service = get_rag_service()
 
 # Environment variables
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -91,8 +94,16 @@ if OPENAI_API_KEY and OPENAI_API_KEY != 'your_openai_key_here':
         print(f"⚠️  OpenAI not configured: {e}")
         openai_client = None
 
-# In-memory conversation storage
-conversations = {}
+# Response cache for high-frequency stateless questions (hours, pricing, location, etc.)
+# Only caches when no booking flow is active. Keyed by normalized message text.
+_response_cache: Dict[str, Dict] = {}
+
+# Intents whose responses are deterministic and safe to cache
+_CACHEABLE_INTENTS = {
+    'ask_hours', 'ask_pricing', 'ask_location', 'ask_doctors',
+    'ask_services', 'ask_online_consultation', 'ask_parking',
+    'ask_insurance', 'ask_languages', 'ask_bring_tests',
+}
 
 
 # Pydantic models
@@ -100,6 +111,16 @@ class ChatMessage(BaseModel):
     message: str
     sender: str = "test_user"
     name: str = "Test User"
+
+    @field_validator('message')
+    @classmethod
+    def message_must_not_be_empty(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError('Message cannot be empty')
+        if len(v) > 2000:
+            raise ValueError('Message too long (max 2000 characters)')
+        return v
 
 
 class AppointmentBooking(BaseModel):
@@ -162,35 +183,17 @@ def get_rasa_response(message: str, sender: str) -> Dict:
         }
 
 
-def get_intent_from_rasa(message: str, sender: str) -> Dict:
-    """Get intent classification from RASA (backward compatibility)"""
-    result = get_rasa_response(message, sender)
-    return {
-        'intent': result['intent'],
-        'confidence': result['confidence'],
-        'entities': result['entities']
-    }
-
-
-def extract_buttons_from_rasa(rasa_responses: List[Dict]) -> List[str]:
-    """Extract button titles from Rasa responses"""
-    buttons = []
-    for response in rasa_responses:
-        if 'buttons' in response and isinstance(response['buttons'], list):
-            for button in response['buttons']:
-                if 'title' in button:
-                    buttons.append(button['title'])
-    return buttons
-
-
-def ask_openai(message: str, sender: str, context: Dict) -> str:
-    """Send message to OpenAI with full conversation history for context-aware responses"""
+def ask_openai(message: str, sender: str, context: Dict, rag_context: str = None) -> str:
+    """Send message to OpenAI, optionally grounded with RAG-retrieved knowledge base context."""
     try:
         if not openai_client:
             print(f"   ⚠️  OpenAI not configured")
             return None
 
-        print(f"   → Asking OpenAI with conversation history...")
+        if rag_context:
+            print(f"   → Asking OpenAI with RAG context (grounded)...")
+        else:
+            print(f"   → Asking OpenAI with conversation history...")
 
         # Build conversation history for OpenAI
         messages = []
@@ -200,15 +203,26 @@ def ask_openai(message: str, sender: str, context: Dict) -> str:
         user_info = context.get('user_info', {})
         collected_info = ', '.join([f"{k}: {v}" for k, v in user_info.items()]) if user_info else 'none yet'
 
+        # Build doctor info dynamically from config.yml
+        doctors = config.config.get('doctors', [])
+        doctor = doctors[0] if doctors else {}
+        doctor_name = doctor.get('full_name', 'Our Doctor')
+        doctor_title = doctor.get('title', '')
+        doctor_qualifications = doctor.get('qualifications', '')
+        doctor_specialties = ', '.join(doctor.get('specialties', config.specialties))
+        doctor_languages = ', '.join(doctor.get('languages', ['English']))
+        doctor_locations = ', '.join(doctor.get('locations', [config.city]))
+        doctor_approach = doctor.get('approach', '')
+
         system_prompt = f"""You are a helpful medical assistant for {config.clinic_name}.
 
 DOCTOR INFORMATION:
-- Our doctor is Dr. Rania Said, MD - Pediatrician, Functional Medicine Specialist, and Clinical Nutritionist
-- Certified in Functional Medicine – IFM (Institute for Functional Medicine)
-- She specializes in: pediatric nutrition, clinical nutrition, digestive health, hormonal imbalances, chronic fatigue, autoimmune conditions, metabolic health
-- She speaks English and Arabic
-- Locations: Cairo – Dubai
-- Her approach: root cause analysis and personalized treatment plans
+- {doctor_name} — {doctor_title}
+- {doctor_qualifications}
+- Specializes in: {doctor_specialties}
+- Languages: {doctor_languages}
+- Locations: {doctor_locations}
+- Approach: {doctor_approach}
 
 CONSULTATION OPTIONS:
 - IN-PERSON: At our clinic in {config.area}, {config.city}
@@ -217,7 +231,7 @@ CONSULTATION OPTIONS:
 
 IMPORTANT SAFETY GUIDELINES:
 - Help with appointments, pricing, lab tests, and clinic information
-- Answer health questions (never diagnose, always recommend seeing Dr. Rania Said)
+- Answer health questions (never diagnose, always recommend seeing {doctor_name})
 - Respond in the SAME language as the patient
 - Be empathetic, professional, and concise
 - NEVER hallucinate or confirm appointment bookings
@@ -238,10 +252,16 @@ CURRENT CONVERSATION STATE:
 
 If in booking flow, help collect missing information naturally in conversation, one piece at a time."""
 
+        # Append RAG-retrieved knowledge when available — grounds the answer in
+        # actual clinic documents instead of LLM general knowledge.
+        if rag_context:
+            system_prompt += f"\n\nRELEVANT CLINIC KNOWLEDGE BASE:\n{rag_context}\n\nAnswer using the knowledge above. Do not guess or add information not in the knowledge base."
+
         messages.append({"role": "system", "content": system_prompt})
 
-        # Add conversation history (last 15 messages for context)
-        history = context.get('history', [])[-15:]
+        # Fewer history turns needed when RAG context already grounds the answer
+        history_limit = 4 if rag_context else 8
+        history = context.get('history', [])[-history_limit:]
         for turn in history:
             messages.append({
                 "role": "user",
@@ -258,17 +278,18 @@ If in booking flow, help collect missing information naturally in conversation, 
 
         # 🔍 LOG OPENAI REQUEST
         print(f"\n📤 SENDING TO OPENAI:")
+        print(f"   └─ Mode: {'RAG-grounded' if rag_context else 'History-aware'}")
         print(f"   └─ System Prompt: {len(system_prompt)} chars")
         print(f"   └─ Conversation History: {len(history)} messages")
         print(f"   └─ Total Context: {len(messages)} messages")
         print(f"   └─ Current Flow: {current_flow}")
         print(f"   └─ User Info: {collected_info}")
 
-        # Call OpenAI with GPT-4
+        # Call OpenAI with GPT-4o-mini
         completion = openai_client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=messages,
-            max_tokens=500,
+            max_tokens=300,
             temperature=0.7
         )
 
@@ -276,7 +297,7 @@ If in booking flow, help collect missing information naturally in conversation, 
 
         print(f"\n📥 OPENAI RESPONSE:")
         print(f"   └─ Generated: {len(reply)} chars")
-        print(f"   └─ Model: gpt-4")
+        print(f"   └─ Model: gpt-4o-mini")
         print(f"   ✅ OpenAI response generated ({len(history)} messages in context)")
 
         return reply
@@ -285,51 +306,56 @@ If in booking flow, help collect missing information naturally in conversation, 
         print(f"   ❌ OpenAI error: {str(e)}")
         return None
 
-    # Original implementation removed - replaced with history-aware version above
-    # try:
-    #     if not openai_client:
-    #         return "I can help with specific questions about the clinic. Try asking about hours, pricing, or services!"
-    #
-    #     print(f"   → Asking OpenAI...")
-    #
-    #     if sender not in conversations:
-    #         conversations[sender] = []
-    #
-    #     # Build system prompt from config
-    #     system_prompt = f"""You are a helpful medical assistant for {config.clinic_name}.
-    # - Help with appointments ({config.hours_display})
-    # - Answer health questions (never diagnose, always recommend seeing a doctor)
-    # - Respond in the SAME language as the patient (English or Arabic)
-    # - Be empathetic, professional, and concise
-    # - Consultation fees: Initial {config.initial_consultation_price} {config.currency}, Follow-up {config.followup_consultation_price} {config.currency}, Emergency {config.emergency_consultation_price} {config.currency}
-    # - Location: {config.area}, {config.city}"""
-    #
-    #     messages = [
-    #         {"role": "system", "content": system_prompt},
-    #         *conversations[sender],
-    #         {"role": "user", "content": message}
-    #     ]
-    #
-    #     completion = openai_client.chat.completions.create(
-    #         model="gpt-4",
-    #         messages=messages,
-    #         max_tokens=200,
-    #         temperature=0.7
-    #     )
-    #
-    #     reply = completion.choices[0].message.content
-    #
-    #     conversations[sender].append({"role": "user", "content": message})
-    #     conversations[sender].append({"role": "assistant", "content": reply})
-    #
-    #     if len(conversations[sender]) > 20:
-    #         conversations[sender] = conversations[sender][-20:]
-    #
-    #     return reply
-    #
-    # except Exception as e:
-    #     print(f"   ❌ OpenAI error: {str(e)}")
-    #     return "I'm having trouble processing that. Please try again."
+
+# Keyword pre-filter: maps (lowercase keyword → intent).
+# Checked before Rasa to skip the HTTP call entirely for obvious phrases.
+# Order matters — more specific phrases first.
+_KEYWORD_SHORTCUTS: List[tuple] = [
+    # Booking — specific enough to avoid false positives like "book a table"
+    ('book appointment', 'book_appointment'),
+    ('book an appointment', 'book_appointment'),
+    ('book a consultation', 'book_appointment'),
+    ('book a visit', 'book_appointment'),
+    ('schedule appointment', 'book_appointment'),
+    ('make appointment', 'book_appointment'),
+    # Hours — avoid "what time is it?" false positive
+    ('opening hour', 'ask_hours'),
+    ('working hour', 'ask_hours'),
+    ('what time do you open', 'ask_hours'),
+    ('what time are you open', 'ask_hours'),
+    ('what time does the clinic', 'ask_hours'),
+    ('when are you open', 'ask_hours'),
+    ('are you open', 'ask_hours'),
+    ('clinic hour', 'ask_hours'),
+    # Pricing
+    ('how much', 'ask_pricing'),
+    ('what is the price', 'ask_pricing'),
+    ('what is the cost', 'ask_pricing'),
+    ('consultation fee', 'ask_pricing'),
+    ('consultation cost', 'ask_pricing'),
+    ('pricing', 'ask_pricing'),
+    # Location
+    ('where are you', 'ask_location'),
+    ('your address', 'ask_location'),
+    ('clinic location', 'ask_location'),
+    ('how to get', 'ask_location'),
+    # Doctor
+    ('about the doctor', 'ask_doctors'),
+    ('who is the doctor', 'ask_doctors'),
+    ('tell me about dr', 'ask_doctors'),
+    # Greeting — Arabic + English
+    ('مرحب', 'greet'),
+    ('السلام', 'greet'),
+]
+
+
+def _keyword_shortcut(message: str) -> Optional[str]:
+    """Return an intent if the message matches a keyword shortcut, else None."""
+    lower = message.lower()
+    for keyword, intent in _KEYWORD_SHORTCUTS:
+        if keyword in lower:
+            return intent
+    return None
 
 
 def get_reply(message: str, sender: str, name: str) -> Dict:
@@ -338,14 +364,23 @@ def get_reply(message: str, sender: str, name: str) -> Dict:
     print(f"📨 From: {name} ({sender})")
     print(f"💬 Message: \"{message}\"")
 
-    # Get intent from RASA (stateless classification only)
-    rasa_result = get_rasa_response(message, sender)
-    intent = rasa_result['intent']
-    confidence = rasa_result['confidence']
-    entities = rasa_result.get('entities', [])
-
-    # Get conversation context (backend manages all state)
+    # Get conversation context early — needed for flow check before shortcuts
     context = agent_router.context_manager.get_context(sender)
+    current_flow_early = context.get('current_flow')
+
+    # Keyword pre-filter — only when no active flow (flow needs Rasa for step parsing)
+    shortcut_intent = None if current_flow_early else _keyword_shortcut(message)
+    if shortcut_intent:
+        print(f"⚡ KEYWORD SHORTCUT: '{shortcut_intent}' — skipping Rasa")
+        intent = shortcut_intent
+        confidence = 1.0
+        entities = []
+    else:
+        # Get intent from RASA (stateless classification only)
+        rasa_result = get_rasa_response(message, sender)
+        intent = rasa_result['intent']
+        confidence = rasa_result['confidence']
+        entities = rasa_result.get('entities', [])
 
     # 🔍 LOG CONVERSATION HISTORY AND STATE
     print(f"\n📊 CONTEXT DEBUG:")
@@ -444,6 +479,13 @@ def get_reply(message: str, sender: str, name: str) -> Dict:
     # PRIORITY 2: High Confidence Intent Classification
     # If no active flow, use specialized agents for high-confidence intents
     elif confidence >= CONFIDENCE_THRESHOLD and intent != 'unknown':
+        # Serve from cache for stateless informational intents
+        cache_key = f"{intent}:{message.lower().strip()}"
+        if intent in _CACHEABLE_INTENTS and cache_key in _response_cache:
+            print(f"✅ Cache HIT for '{intent}' — skipping agent call")
+            cached = _response_cache[cache_key]
+            return {**cached, 'handler': f"Cache ({cached['handler']})"}
+
         print(f"✅ High confidence ({confidence * 100:.1f}%) - Routing to specialized agent")
         agent_result = agent_router.route(intent, message, sender)
 
@@ -452,7 +494,7 @@ def get_reply(message: str, sender: str, name: str) -> Dict:
         if agent_result.get('buttons'):
             print(f"   🔘 Buttons: {agent_result['buttons']}")
 
-        return {
+        result = {
             'reply': agent_result['response'],
             'handler': f"Agent ({agent_result['agent']})",
             'intent': intent,
@@ -460,30 +502,74 @@ def get_reply(message: str, sender: str, name: str) -> Dict:
             'buttons': agent_result.get('buttons', [])
         }
 
-    # PRIORITY 3: OpenAI with Conversation History
-    # For ambiguous messages, use OpenAI with full context
-    else:
-        print(f"🤖 Low confidence ({confidence * 100:.1f}%) - Using OpenAI with conversation history")
-        print(f"   └─ Passing {len(context.get('history', []))} messages for context")
+        # Store in cache if this is a stateless informational intent
+        if intent in _CACHEABLE_INTENTS:
+            _response_cache[cache_key] = result
 
-        openai_response = ask_openai(message, sender, context)
+        return result
+
+    # PRIORITY 3: RAG — retrieve from clinic knowledge base
+    # For questions about treatments, conditions, doctor info, protocols.
+    # Grounded answers from actual clinic documents — no hallucination.
+    # Only skipped if RAG finds nothing relevant (score threshold not met).
+    else:
+        # Check LLM/RAG response cache first
+        llm_cache_key = f"llm:{message.lower().strip()}"
+        if llm_cache_key in _response_cache:
+            print(f"✅ LLM Cache HIT — skipping RAG + OpenAI call")
+            cached = _response_cache[llm_cache_key]
+            agent_router.context_manager.update_context(
+                sender, 'openai', intent, message, cached['reply']
+            )
+            return {**cached, 'handler': f"Cache (OpenAI)"}
+
+        # Try RAG retrieval
+        RAG_SCORE_THRESHOLD = 0.45  # Minimum similarity score to use RAG context
+        rag_context = None
+        rag_hits = []
+
+        try:
+            rag_hits = rag_service.retrieve(message, top_k=3)
+            top_score = rag_hits[0]['score'] if rag_hits else 0
+            print(f"🔍 RAG retrieval: {len(rag_hits)} results, top score={top_score:.3f}")
+
+            if top_score >= RAG_SCORE_THRESHOLD:
+                # Build context string from top retrieved chunks
+                rag_context = "\n\n".join(
+                    f"[{doc['title']}]\n{doc['text']}"
+                    for doc in rag_hits
+                    if doc['score'] >= RAG_SCORE_THRESHOLD
+                )
+                print(f"   ✅ RAG context found ({len(rag_context)} chars) — grounding LLM answer")
+            else:
+                print(f"   ⚠️  RAG score too low ({top_score:.3f} < {RAG_SCORE_THRESHOLD}) — falling back to history-aware LLM")
+        except Exception as e:
+            print(f"   ❌ RAG error: {e} — falling back to LLM")
+
+        # PRIORITY 4: OpenAI — grounded with RAG context if available, else history-aware
+        mode = "RAG-grounded" if rag_context else "history-aware"
+        print(f"🤖 Low confidence ({confidence * 100:.1f}%) — Using OpenAI ({mode})")
+
+        openai_response = ask_openai(message, sender, context, rag_context=rag_context)
 
         if openai_response:
-            # Update context with OpenAI response
             agent_router.context_manager.update_context(
                 sender, 'openai', intent, message, openai_response
             )
-            print(f"   ✅ OpenAI generated context-aware response")
+            handler = f"RAG + OpenAI (grounded)" if rag_context else "OpenAI (history-aware)"
+            print(f"   ✅ {handler} response generated")
 
-            return {
+            result = {
                 'reply': openai_response,
-                'handler': 'OpenAI (History-aware)',
+                'handler': handler,
                 'intent': intent,
                 'confidence': confidence,
                 'buttons': []
             }
+            _response_cache[llm_cache_key] = result
+            return result
 
-        # PRIORITY 4: General Agent Fallback
+        # PRIORITY 5: General Agent Fallback
         # Ultimate fallback if OpenAI unavailable
         print(f"⚠️  OpenAI unavailable - using general agent fallback")
         fallback_response = agent_router.get_fallback_response(message, sender)
@@ -525,14 +611,24 @@ async def home():
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
+    # Probe Rasa liveness
+    rasa_status = "unreachable"
+    try:
+        r = requests.get(f"{RASA_URL}/", timeout=3)
+        rasa_status = "ok" if r.status_code == 200 else f"http_{r.status_code}"
+    except Exception:
+        pass
+
     return {
         "status": "OK",
         "timestamp": datetime.now().isoformat(),
         "clinic": config.clinic_name,
         "rasa_url": RASA_URL,
+        "rasa_status": rasa_status,
         "confidence_threshold": CONFIDENCE_THRESHOLD,
         "google_calendar_enabled": config.google_calendar_enabled,
-        "openai_enabled": openai_client is not None
+        "openai_enabled": openai_client is not None,
+        "rag_documents": len(rag_service.metadata) if rag_service.metadata else 0
     }
 
 
@@ -704,9 +800,6 @@ async def check_availability(query: AvailabilityQuery):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-from fastapi import BackgroundTasks
-import pytz
 
 @app.post("/appointments/book")
 async def book_appointment(

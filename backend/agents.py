@@ -189,31 +189,32 @@ class ConversationContext:
 
     def _extract_user_info(self, context: Dict, message: str):
         """Extract user information from messages"""
-        # Extract name (if not already set)
+        # Extract name only when explicitly stated ("my name is X", "I'm X", etc.)
+        # Standalone word/phrase patterns are too error-prone — the booking flow
+        # collects the name explicitly via the awaiting_name step instead.
         if 'name' not in context['user_info']:
-            # Excluded words that are greetings, not names
-            excluded_greetings = ['hello', 'hi', 'hey', 'greetings', 'good', 'morning', 'afternoon', 'evening', 'bye', 'goodbye', 'thanks', 'thank', 'yes', 'no', 'okay', 'ok', 'online', 'offline', 'consultation', 'person']
-
-            # Try common name patterns first
-            name_patterns = [
-                r"(?:my name is|i'm|i am|this is|call me)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)",  # "My name is John Doe"
-                r"^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*$",  # Just "John Doe" alone
-                r"^([A-Z][a-z]+)$",  # Just "John" alone
-            ]
-            for pattern in name_patterns:
-                name_match = re.search(pattern, message, re.IGNORECASE)
-                if name_match:
-                    extracted_name = name_match.group(1).strip()
-
-                    # Skip if it's a common greeting or contains excluded words
-                    name_words = extracted_name.lower().split()
-                    if extracted_name.lower() in excluded_greetings or any(word in excluded_greetings for word in name_words):
-                        continue
-
-                    # Capitalize properly (in case user typed lowercase)
-                    extracted_name = ' '.join(word.capitalize() for word in extracted_name.split())
-                    context['user_info']['name'] = extracted_name
-                    break
+            excluded_words = {
+                'hello', 'hi', 'hey', 'greetings', 'good', 'morning', 'afternoon',
+                'evening', 'bye', 'goodbye', 'thanks', 'thank', 'yes', 'no', 'okay',
+                'ok', 'sure', 'fine', 'great', 'alright', 'right', 'please', 'help',
+                'online', 'offline', 'consultation', 'person', 'book', 'appointment',
+                'cancel', 'stop', 'start', 'continue', 'next', 'back', 'zoom',
+            }
+            # Only extract when user explicitly introduces themselves
+            # Supports English and Arabic names
+            name_pattern = (
+                r"(?:my name is|i'm|i am|this is|call me|اسمي|أنا)\s+"
+                r"([\u0600-\u06FFA-Za-z][\u0600-\u06FFA-Za-z]+(?:\s+[\u0600-\u06FFA-Za-z][\u0600-\u06FFA-Za-z]+)?)"
+            )
+            name_match = re.search(name_pattern, message, re.IGNORECASE)
+            if name_match:
+                extracted_name = name_match.group(1).strip()
+                name_words = extracted_name.lower().split()
+                if not (extracted_name.lower() in excluded_words or
+                        any(word in excluded_words for word in name_words)):
+                    context['user_info']['name'] = ' '.join(
+                        word.capitalize() for word in extracted_name.split()
+                    )
 
         # Extract email
         email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', message)
@@ -742,8 +743,39 @@ class AppointmentAgent(BaseAgent):
             return self._handle_confirmation(message, context)
 
         elif step == 'awaiting_name':
-            # User provided name
-            context['user_info']['name'] = message.strip()
+            name = message.strip()
+
+            # Words that are clearly not names
+            not_a_name = {
+                'hello', 'hi', 'hey', 'greetings', 'good', 'morning', 'afternoon',
+                'evening', 'bye', 'goodbye', 'thanks', 'thank', 'yes', 'no', 'okay',
+                'ok', 'sure', 'fine', 'great', 'alright', 'right', 'please', 'help',
+                'online', 'offline', 'consultation', 'person', 'book', 'appointment',
+                'cancel', 'stop', 'start', 'continue', 'next', 'back', 'zoom',
+            }
+
+            # Allow Latin and Arabic letters, spaces, hyphens, apostrophes
+            name_regex = re.compile(
+                r'^[\u0600-\u06FFA-Za-z][\u0600-\u06FFA-Za-z\s\'\-]{1,49}$'
+            )
+
+            name_words = name.lower().split()
+
+            if len(name) < 2 or not name_regex.match(name):
+                return {
+                    'message': "Please enter your full name using letters only (e.g., Ahmed Ali or Sarah Johnson).",
+                    'buttons': []
+                }
+            if all(word in not_a_name for word in name_words):
+                return {
+                    'message': "Please enter your actual full name so we can confirm your appointment.",
+                    'buttons': []
+                }
+
+            # Store name, capitalising each word (works for both Latin and Arabic)
+            context['user_info']['name'] = ' '.join(
+                word.capitalize() for word in name.split()
+            )
 
             # Check if we already have email and phone
             has_email = 'email' in context['user_info']
@@ -783,26 +815,43 @@ class AppointmentAgent(BaseAgent):
                 return {'message': "Please provide a valid email address (e.g., yourname@example.com).", 'buttons': []}
 
         elif step == 'awaiting_phone':
-            # User provided phone
-            phone = re.sub(r'[\s\-\(\)]', '', message)
+            # Strip spaces, dashes, parentheses
+            phone = re.sub(r'[\s\-\(\)]', '', message.strip())
 
-            # Validate UAE phone pattern
-            uae_pattern = r'^(\+971|00971|0)?[0-9]{9,10}$'
+            # UAE patterns
+            uae_pattern = r'^(\+971|00971|0)[0-9]{9,10}$'
+            # Any international number: +<country_code><6-14 digits>
+            intl_pattern = r'^\+[1-9][0-9]{6,14}$'
+            # Bare digits (9-10 digits, no country code) — assumed UAE
+            bare_uae_pattern = r'^[1-9][0-9]{8,9}$'
+
             if re.match(uae_pattern, phone):
-                # Normalize to international format
+                # Normalise UAE to +971...
                 if phone.startswith('00971'):
                     phone = '+971' + phone[5:]
                 elif phone.startswith('0'):
                     phone = '+971' + phone[1:]
                 elif not phone.startswith('+'):
                     phone = '+971' + phone
-
-                context['user_info']['phone'] = phone
-
-                # After phone, ask for location confirmation
-                return self._ask_location_confirmation(context)
+            elif re.match(intl_pattern, phone):
+                # Already in international format — keep as-is
+                pass
+            elif re.match(bare_uae_pattern, phone):
+                # Assume UAE for 9-10 digit bare numbers
+                phone = '+971' + phone
             else:
-                return {'message': "Please provide a valid UAE phone number (e.g., +971501234567 or 0501234567).", 'buttons': []}
+                return {
+                    'message': (
+                        "Please provide a valid phone number.\n"
+                        "Examples: +971501234567, 0501234567, +447911123456, +12025551234"
+                    ),
+                    'buttons': []
+                }
+
+            context['user_info']['phone'] = phone
+
+            # After phone, ask for location confirmation
+            return self._ask_location_confirmation(context)
 
         elif step == 'awaiting_location_confirmation':
             # User confirmed or denied their location
@@ -863,7 +912,7 @@ class AppointmentAgent(BaseAgent):
         message_lower = message.lower()
 
         # Determine appointment type from message
-        if 'online' in message_lower or 'virtual' in message_lower:
+        if 'online' in message_lower or 'virtual' in message_lower or 'zoom' in message_lower or 'video' in message_lower:
             appointment_type = 'online'
             display_text = 'Online Consultation'
         elif 'offline' in message_lower or 'person' in message_lower or 'clinic' in message_lower or 'visit' in message_lower:

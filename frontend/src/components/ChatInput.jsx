@@ -1,109 +1,86 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { sendMessage } from '../store/slices/chatSlice'
-import { Send, Plus } from 'lucide-react'
+import { Send, Paperclip, CalendarPlus } from 'lucide-react'
 
 export default function ChatInput() {
   const [text, setText] = useState('')
-  const fileRef = useRef(null)
-  const dispatch = useDispatch()
+  const fileRef         = useRef(null)
+  const taRef           = useRef(null)
+  const dispatch        = useDispatch()
+  const loading         = useSelector(s => s.chat.loading)
+  const canSend         = text.trim().length > 0 && !loading
 
-  // 🔥 backend-aligned loading state
-  const loading = useSelector(state => state.chat.loading)
-  const isDisabled = !text.trim() || loading
+  const grow = useCallback(() => {
+    const el = taRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = Math.min(el.scrollHeight, 110) + 'px'
+  }, [])
+
+  const onChange = e => { setText(e.target.value); grow() }
 
   const submit = () => {
-    if (isDisabled) return
-    dispatch(sendMessage(text))
+    if (!canSend) return
+    dispatch(sendMessage(text.trim()))
     setText('')
+    if (taRef.current) taRef.current.style.height = 'auto'
   }
 
-  // 📎 UI-only upload (backend ready)
-  const handleUpload = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+  const onKey = e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() }
+  }
 
-    dispatch(
-      sendMessage(
-        `📎 Uploaded document: ${file.name} (${Math.round(
-          file.size / 1024
-        )} KB)`
-      )
-    )
-
-    // reset input so same file can be uploaded again
+  const onFile = e => {
+    const f = e.target.files[0]
+    if (!f) return
+    dispatch(sendMessage(`📎 Uploaded: ${f.name} (${Math.round(f.size / 1024)} KB)`))
     e.target.value = ''
   }
 
   return (
-    <div
-      className="border-t bg-white px-6 py-4"
-      style={{ borderColor: 'var(--green-primary)' }}
-    >
-      <input
-        ref={fileRef}
-        type="file"
-        className="hidden"
-        onChange={handleUpload}
-      />
+    <div className="inp-bar">
+      <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={onFile} />
 
-      <div className="flex items-center gap-3">
-        {/* ➕ Upload */}
-        <button
-          onClick={() => fileRef.current.click()}
-          disabled={loading}
-          className="h-11 w-11 rounded-full text-white shadow flex items-center justify-center hover:opacity-90 disabled:opacity-50"
-          style={{ backgroundColor: 'var(--green-primary)' }}
-        >
-          <Plus size={22} strokeWidth={2} />
-        </button>
+      <div className="inp-inner">
+        <div className="inp-box">
+          <button className="btn-att" onClick={() => fileRef.current.click()} disabled={loading} title="Attach file">
+            <Paperclip size={16} strokeWidth={2} />
+          </button>
 
-        {/* 💬 Text input */}
-        <input
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && submit()}
-          placeholder={loading ? 'Assistant is typing…' : 'Type your message…'}
-          className="flex-1 border rounded-lg px-4 py-3 h-11"
-          style={{ borderColor: 'var(--green-primary)' }}
-          disabled={loading}
-        />
+          <div className="vr" />
 
-        {/* 📅 Appointment intent */}
-        <button
-          onClick={() =>
-            dispatch(
-              sendMessage(
-                'Book appointment',
-                '__INTENT_BOOK_APPOINTMENT__'
-              )
-            )
-          }
-          disabled={loading}
-          className="h-11 px-4 rounded-lg border font-medium hover:bg-[var(--green-muted)] disabled:opacity-50"
-          style={{
-            borderColor: 'var(--green-primary)',
-            color: 'var(--green-primary)'
-          }}
-        >
-          Book Appointment
-        </button>
+          <textarea
+            ref={taRef}
+            className="inp-ta"
+            rows={1}
+            value={text}
+            onChange={onChange}
+            onKeyDown={onKey}
+            placeholder={loading ? 'Assistant is typing…' : 'Ask anything about your health…'}
+            disabled={loading}
+          />
 
-      
-        <button
-          onClick={submit}
-          disabled={isDisabled}
-          className="h-11 px-6 rounded-lg text-white shadow hover:opacity-90 inline-flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
-          style={{
-            backgroundColor: 'var(--green-primary)',
-            cursor: isDisabled ? 'not-allowed' : 'pointer'
-          }}
-        >
-          <Send size={16} strokeWidth={1.75} />
-          <span className="text-sm font-medium leading-none">
+          <div className="vr" />
+
+          <button
+            className="btn-book"
+            onClick={() => dispatch(sendMessage('Book appointment', '__INTENT_BOOK_APPOINTMENT__'))}
+            disabled={loading}
+          >
+            <CalendarPlus size={14} strokeWidth={2} />
+            Book Appointment
+          </button>
+
+          <button className="btn-send" onClick={submit} disabled={!canSend}>
+            <Send size={14} strokeWidth={2.2} />
             Send
-          </span>
-        </button>
+          </button>
+        </div>
+
+        <p className="inp-hint">
+          <strong>Enter</strong> to send &nbsp;·&nbsp; <strong>Shift + Enter</strong> for new line
+        </p>
       </div>
     </div>
   )

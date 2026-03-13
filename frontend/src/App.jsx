@@ -1,30 +1,22 @@
 import { useEffect } from 'react'
+import { useDispatch } from 'react-redux'
 import Chat from './pages/Chat'
 import { healthCheck, getConfig } from './api/chatApi'
+import { setConnectionError } from './store/slices/chatSlice'
 
 export default function App() {
-  useEffect(() => {
-    // 🔍 Backend health check
-    healthCheck()
-      .then(res => {
-        console.log('Backend healthy:', res)
-      })
-      .catch(() => {
-        alert('Healthcare assistant is currently unavailable')
-      })
+  const dispatch = useDispatch()
 
-    // 🏥 Load clinic config (for header, pricing later)
+  useEffect(() => {
+    healthCheck()
+      .then(() => dispatch(setConnectionError(false)))
+      .catch(() => dispatch(setConnectionError(true)))
     getConfig()
-      .then(cfg => {
-        console.log('Clinic config:', cfg)
-      })
-      .catch(() => {
-        console.warn('Could not load clinic config')
-      })
-  }, [])
+      .catch(() => console.warn('Could not load clinic config'))
+  }, [dispatch])
 
   return (
-    <div className="h-screen bg-slate-50">
+    <div className="app-shell">
       <Chat />
     </div>
   )
